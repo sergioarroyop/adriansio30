@@ -3,49 +3,82 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Descenso 5 Pisos</title>
-  <style>
-    html, body { margin: 0; padding: 0; background: #2e2e2e; color: #fff; height: 100%; overflow: hidden; }
-    #container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-    #gameWrapper { background: #eee; border: 20px solid #2e2e2e; box-sizing: content-box; }
-    canvas { display: block; background: #eee; }
-    #hud { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.65); padding: 10px 16px; border-radius: 8px; font-family: sans-serif; font-size: 20px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-    #restartBtn, #immortalBtn { cursor: pointer; padding: 6px 10px; background: #fff; color: #000; border-radius: 6px; font-size: 16px; user-select: none; }
-    #restartBtn:hover, #immortalBtn:hover { background: #ccc; }
-    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(46,46,46,0.95); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-size: 24px; z-index: 100; }
-    #overlay.hidden { display: none; }
-    #winModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: #fff; display: flex; justify-content: center; align-items: center; font-size: 40px; font-family: sans-serif; z-index: 200; }
-    #winModal.hidden { display: none; }
-  </style>
+  <title>¡Feliz Cumpleaños Adrian! 🎉</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="gameStorage.js"></script>
+  <script src="resolution.js"></script>
 </head>
 <body>
   <div id="container">
     <div id="gameWrapper">
-      <canvas id="game"></canvas>
-      <div id="hud">
-        <span id="floorInfo">Piso: 1 / 5</span>
-        <div id="restartBtn">Reiniciar</div>
-        <div id="immortalBtn">Inmortal: OFF</div>
+      <!-- Globos decorativos -->
+      <div class="balloon"></div>
+      <div class="balloon"></div>
+      <div class="balloon"></div>
+      <div class="balloon"></div>
+      <div class="balloon"></div>
+      <div class="balloon"></div>
+      
+      <!-- Confeti -->
+      <div class="confetti" style="left: 10%; animation-delay: 0s;"></div>
+      <div class="confetti" style="left: 20%; animation-delay: 0.5s;"></div>
+      <div class="confetti" style="left: 30%; animation-delay: 1s;"></div>
+      <div class="confetti" style="left: 40%; animation-delay: 1.5s;"></div>
+      <div class="confetti" style="left: 50%; animation-delay: 2s;"></div>
+      <div class="confetti" style="left: 60%; animation-delay: 2.5s;"></div>
+      <div class="confetti" style="left: 70%; animation-delay: 3s;"></div>
+      <div class="confetti" style="left: 80%; animation-delay: 3.5s;"></div>
+      <div class="confetti" style="left: 90%; animation-delay: 4s;"></div>
+      
+      <div id="menuContent">
+        <h1 id="birthdayTitle">🎉 ¡Feliz Cumpleaños Adrian! 🎉</h1>
+        
+        <div id="birthdayMessage">
+          ¡Felicidades Adrian! 🎂 Tu fiesta de cumpleaños está en PELIGRO! 
+          Los invitados están atrapados y la comida se está escapando. 
+          ¡Tienes que ayudar a rescatar a todos los invitados y recuperar la comida 
+          antes de que sea demasiado tarde! ¡La celebración más épica del año depende de ti! 🎊
+        </div>
+        
+        <div id="partyStatus">
+          🚨 Estado de la Fiesta: ¡EMERGENCIA! ¡Necesitamos un HÉROE! 🚨
+        </div>
+        
+        <div id="gameLinks">
+          <a href="juego1.html" class="gameLink">🎮 Juego 1 - Descenso 5 Pisos</a>
+          <a href="juego2.html" class="gameLink">🎮 Juego 2 - Rescate de Invitados</a>
+          <a href="juego3.html" class="gameLink">🎮 Juego 3 - Aventura Épica</a>
+          <a href="fiesta.html" class="gameLink locked" id="fiestaLink">🎉 Fiesta - Celebración Final</a>
+        </div>
       </div>
     </div>
   </div>
+  
   <div id="overlay" class="hidden">
-    <p>El juego requiere una resolución mínima de 1920x1080</p>
-    <p>Aumenta el tamaño de la ventana o activa pantalla completa.</p>
+    <p>🎮 Los juegos requieren una resolución mínima de 1920x1080</p>
+    <p>📏 Resolución actual: <span id="currentResolution"></span></p>
+    <p>💡 Aumenta el tamaño de la ventana o activa pantalla completa.</p>
   </div>
-  <div id="winModal" class="hidden">¡Has ganado!</div>
+  
   <script>
-    // Activar/desactivar inmortalidad desde el botón
-    const immortalBtn = document.getElementById('immortalBtn');
-    let immortal = false;
-    window.IMMORTAL_MODE = immortal;
-
-    immortalBtn.addEventListener('click', () => {
-      immortal = !immortal;
-      immortalBtn.textContent = `Inmortal: ${immortal ? 'ON' : 'OFF'}`;
-      window.IMMORTAL_MODE = immortal;
-    });
+    
+    // El sistema de verificación de resolución se maneja automáticamente
+    // a través de gameStorage.js con resolución mínima de 1920x1080
+    
+    // Crear más confeti dinámicamente
+    function createConfetti() {
+      for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        document.getElementById('gameWrapper').appendChild(confetti);
+      }
+    }
+    
+    // Crear confeti cada 4 segundos
+    setInterval(createConfetti, 4000);
   </script>
-  <script src="game.js"></script>
 </body>
 </html>

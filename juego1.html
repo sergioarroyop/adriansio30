@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Descenso 5 Pisos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="container">
+    <div id="gameWrapper" class="game-medium">
+      <canvas id="game"></canvas>
+      <div id="hud">
+        <span id="floorInfo">Piso: 1 / 5</span>
+      </div>
+    </div>
+  </div>
+  <div id="overlay" class="hidden">
+    <p>El juego requiere una resolución mínima de 1920x1080</p>
+    <p>Aumenta el tamaño de la ventana o activa pantalla completa.</p>
+  </div>
+  <div id="winModal" class="hidden">¡Has ganado!</div>
+  <script src="gameStorage.js"></script>
+  <script src="resolution.js"></script>
+  <script src="sidePanel.js"></script>
+  <script src="game.js"></script>
+  <script>
+    // ===== Panel Lateral para Juego 1 =====
+    let gameStats = {
+      score: 0,
+      level: 1,
+      status: '🔄 En Progreso'
+    };
+
+    let gameOptions = {
+      immortal: false,
+      sound: true,
+      difficulty: 'normal'
+    };
+
+    // Crear panel lateral
+    function initSidePanel() {
+      if (window.SidePanel) {
+        window.SidePanel.createSidePanel({
+          gameName: 'Descenso 5 Pisos',
+          gameId: 'juego1',
+          stats: gameStats,
+          options: gameOptions,
+          onBack: () => window.location.href = 'index.html',
+          onRestart: () => {
+            if (typeof resetGame === 'function') {
+              resetGame();
+            }
+          },
+          onOptionChange: (newOptions) => {
+            gameOptions = { ...gameOptions, ...newOptions };
+            if (window.GameStorage) {
+              window.GameStorage.updateGameOptions(gameOptions);
+            }
+            
+            // Aplicar modo inmortal directamente
+            if (newOptions.immortal !== undefined) {
+              window.IMMORTAL_MODE = newOptions.immortal;
+              console.log(`Modo inmortal: ${newOptions.immortal ? 'ACTIVADO' : 'DESACTIVADO'}`);
+            }
+          }
+        });
+      }
+    }
+
+    // Actualizar estadísticas del panel
+    function updatePanelStats() {
+      if (window.SidePanel) {
+        gameStats.level = currentFloor || 1;
+        gameStats.score = Math.floor((currentFloor || 1) * 100);
+        window.SidePanel.updateSidePanelStats(gameStats);
+      }
+    }
+
+    // Inicializar panel cuando se carga la página
+    document.addEventListener('DOMContentLoaded', initSidePanel);
+
+    // Actualizar estadísticas cada frame - esperar a que game.js esté cargado
+    function setupUpdateOverride() {
+      if (typeof update === 'function') {
+        const originalUpdate = update;
+        update = function() {
+          originalUpdate();
+          updatePanelStats();
+        };
+      } else {
+        // Si update no está disponible aún, reintentar en el siguiente frame
+        requestAnimationFrame(setupUpdateOverride);
+      }
+    }
+    
+    // Configurar la sobrescritura de update después de que se cargue game.js
+    setTimeout(setupUpdateOverride, 100);
+  </script>
+</body>
+</html>

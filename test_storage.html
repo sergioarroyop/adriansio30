@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test - Sistema de Guardado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .success { color: #28a745; }
+    .error { color: #dc3545; }
+    pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test del Sistema de Guardado</h1>
+  
+  <div class="test-section">
+    <h2>Estado Actual del Sistema</h2>
+    <div id="currentState"></div>
+    <button onclick="loadCurrentState()">Cargar Estado</button>
+    <button onclick="resetAllData()">Resetear Todo</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Simular Completar Juegos</h2>
+    <button onclick="completeJuego1()">Completar Juego 1</button>
+    <button onclick="completeJuego2()">Completar Juego 2</button>
+    <button onclick="completeJuego3()">Completar Juego 3</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Probar Funciones Específicas</h2>
+    <button onclick="testUpdateScore()">Actualizar Puntuación Juego 2</button>
+    <button onclick="testCheckCompletion()">Verificar Completado</button>
+    <button onclick="testProgress()">Ver Progreso</button>
+    <button onclick="testSidePanel()">Probar Panel Lateral</button>
+    <button onclick="testResolution()">Probar Resolución</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Log de Operaciones</h2>
+    <div id="log"></div>
+  </div>
+
+  <script src="gameStorage.js"></script>
+  <script src="resolution.js"></script>
+  <script src="sidePanel.js"></script>
+  <script>
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const timestamp = new Date().toLocaleTimeString();
+      const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+      logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function loadCurrentState() {
+      try {
+        const data = window.GameStorage.getGameData();
+        const progress = window.GameStorage.getGameProgress();
+        const resolution = window.Resolution ? window.Resolution.checkResolution() : 'N/A';
+        
+        document.getElementById('currentState').innerHTML = `
+          <h3>Datos Guardados:</h3>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+          <h3>Progreso:</h3>
+          <pre>${JSON.stringify(progress, null, 2)}</pre>
+          <h3>Sistemas Cargados:</h3>
+          <pre>GameStorage: ${window.GameStorage ? '✅' : '❌'}
+Resolution: ${window.Resolution ? '✅' : '❌'}
+SidePanel: ${window.SidePanel ? '✅' : '❌'}
+Resolución OK: ${resolution ? '✅' : '❌'}</pre>
+        `;
+        
+        log('Estado cargado correctamente', 'success');
+      } catch (error) {
+        log(`Error al cargar estado: ${error.message}`, 'error');
+      }
+    }
+
+    function resetAllData() {
+      try {
+        window.GameStorage.resetAllGameData();
+        log('Todos los datos han sido reseteados', 'success');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al resetear: ${error.message}`, 'error');
+      }
+    }
+
+    function completeJuego1() {
+      try {
+        window.GameStorage.onJuego1Complete(5);
+        log('Juego 1 completado (Piso 5)', 'success');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al completar Juego 1: ${error.message}`, 'error');
+      }
+    }
+
+    function completeJuego2() {
+      try {
+        const score = Math.floor(Math.random() * 1000) + 500;
+        window.GameStorage.onJuego2Complete(score);
+        log(`Juego 2 completado con ${score} puntos`, 'success');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al completar Juego 2: ${error.message}`, 'error');
+      }
+    }
+
+    function completeJuego3() {
+      try {
+        window.GameStorage.onJuego3Complete();
+        log('Juego 3 completado', 'success');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al completar Juego 3: ${error.message}`, 'error');
+      }
+    }
+
+    function testUpdateScore() {
+      try {
+        const score = Math.floor(Math.random() * 2000) + 1000;
+        window.GameStorage.updateGameScore('juego2', score);
+        log(`Puntuación del Juego 2 actualizada a ${score}`, 'success');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al actualizar puntuación: ${error.message}`, 'error');
+      }
+    }
+
+    function testCheckCompletion() {
+      try {
+        const allCompleted = window.GameStorage.areAllGamesCompleted();
+        log(`Todos los juegos completados: ${allCompleted ? 'SÍ' : 'NO'}`, allCompleted ? 'success' : 'info');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al verificar completado: ${error.message}`, 'error');
+      }
+    }
+
+    function testProgress() {
+      try {
+        const progress = window.GameStorage.getGameProgress();
+        log(`Progreso: ${progress.completed}/${progress.total} juegos (${progress.percentage}%)`, 'info');
+        loadCurrentState();
+      } catch (error) {
+        log(`Error al obtener progreso: ${error.message}`, 'error');
+      }
+    }
+
+    function testSidePanel() {
+      try {
+        if (window.SidePanel) {
+          window.SidePanel.createSidePanel({
+            gameName: 'Test Game',
+            gameId: 'test',
+            stats: { score: 1000, level: 5, status: '🔄 En Progreso' },
+            options: { immortal: false, sound: true, difficulty: 'normal' },
+            onBack: () => log('Botón Volver presionado', 'info'),
+            onRestart: () => log('Botón Reiniciar presionado', 'info'),
+            onOptionChange: (options) => log(`Opciones cambiadas: ${JSON.stringify(options)}`, 'info')
+          });
+          log('Panel lateral creado correctamente', 'success');
+        } else {
+          log('SidePanel no está disponible', 'error');
+        }
+      } catch (error) {
+        log(`Error al probar panel lateral: ${error.message}`, 'error');
+      }
+    }
+
+    function testResolution() {
+      try {
+        if (window.Resolution) {
+          const isOk = window.Resolution.checkResolution();
+          log(`Resolución actual: ${window.innerWidth}x${window.innerHeight} - OK: ${isOk ? 'Sí' : 'No'}`, 'info');
+          
+          // Probar actualización de overlay
+          const overlay = document.getElementById('overlay');
+          if (overlay) {
+            window.Resolution.updateResolutionOverlay(overlay);
+            log('Overlay de resolución actualizado', 'success');
+          } else {
+            log('No se encontró overlay para probar', 'info');
+          }
+        } else {
+          log('Resolution no está disponible', 'error');
+        }
+      } catch (error) {
+        log(`Error al probar resolución: ${error.message}`, 'error');
+      }
+    }
+
+    // Cargar estado inicial
+    window.addEventListener('load', () => {
+      log('Sistema de guardado inicializado', 'success');
+      loadCurrentState();
+    });
+  </script>
+</body>
+</html>

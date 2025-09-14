@@ -6,7 +6,7 @@ const wrapper = document.getElementById('gameWrapper');
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const floorInfo = document.getElementById('floorInfo');
-const restartBtn = document.getElementById('restartBtn');
+// const restartBtn = document.getElementById('restartBtn'); // Removido - ahora se controla desde el panel lateral
 const overlay = document.getElementById('overlay');
 const winModal = document.getElementById('winModal');
 
@@ -147,11 +147,18 @@ function createFloors(){
 
 // ===== Ajuste del tamaño del canvas =====
 function resizeWrapper(){
-  if (window.innerWidth < 1600 || window.innerHeight < 900) {
-    overlay.classList.remove("hidden");
+  // Usar el sistema global de verificación de resolución
+  if (window.Resolution) {
+    window.Resolution.updateResolutionOverlay(overlay);
   } else {
-    overlay.classList.add("hidden");
+    // Fallback si el sistema global no está disponible
+    if (window.innerWidth < 1920 || window.innerHeight < 1080) {
+      overlay.classList.remove("hidden");
+    } else {
+      overlay.classList.add("hidden");
+    }
   }
+  
   canvas.width = GAME_WIDTH;
   canvas.height = GAME_HEIGHT;
   wrapper.style.width = GAME_WIDTH + "px";
@@ -263,6 +270,12 @@ function update(){
         player.y + player.h > goal.y) {
       gameWon = true;
       winModal.classList.remove("hidden");
+      
+      // Guardar progreso en localStorage
+      if (window.GameStorage) {
+        window.GameStorage.onJuego1Complete(currentFloor);
+        console.log(`Juego 1 completado: Piso ${currentFloor} alcanzado`);
+      }
     }
   }
 
@@ -280,7 +293,7 @@ function resetGame(){
   createFloors();
 }
 
-restartBtn.addEventListener('click', resetGame);
+// restartBtn.addEventListener('click', resetGame); // Removido - ahora se controla desde el panel lateral
 
 // ===== Dibujo en el canvas =====
 function draw(){
