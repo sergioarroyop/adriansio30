@@ -5,7 +5,10 @@
  * @returns {boolean} True si la resolución es suficiente
  */
 function checkResolution() {
-  return window.innerWidth >= 1920 && window.innerHeight >= 1080;
+  // Ajustado para 1920x1000 con tolerancia para barras de herramientas
+  const minWidth = 1900;  // Tolerancia para 1920x1000
+  const minHeight = 950;  // Tolerancia para barras de herramientas
+  return window.innerWidth >= minWidth && window.innerHeight >= minHeight;
 }
 
 /**

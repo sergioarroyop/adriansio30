@@ -40,8 +40,8 @@ const SPEED = 2.5;          // Velocidad lateral del jugador
 const TOTAL_FLOORS = 5;     // Número total de pisos
 const START_Y = 180;        // Altura inicial del primer piso
 const SIDE_MARGIN = 2 * 20; // Márgenes laterales de los huecos
-const GAME_WIDTH = 1920;    // Ancho fijo del juego
-const GAME_HEIGHT = 1080;   // Alto fijo del juego
+const GAME_WIDTH = 1920;    // Ancho fijo del juego - Ajustado para 1920x1000
+const GAME_HEIGHT = 1000;   // Alto fijo del juego - Ajustado para 1920x1000
 const FLOOR_THICKNESS = 40; // Grosor de cada piso
 
 // Distancia vertical entre pisos
