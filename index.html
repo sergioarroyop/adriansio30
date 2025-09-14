@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Descenso 5 Pisos</title>
+  <style>
+    html, body { margin: 0; padding: 0; background: #2e2e2e; color: #fff; height: 100%; overflow: hidden; }
+    #container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+    #gameWrapper { background: #eee; border: 20px solid #2e2e2e; box-sizing: content-box; }
+    canvas { display: block; background: #eee; }
+    #hud { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.65); padding: 10px 16px; border-radius: 8px; font-family: sans-serif; font-size: 20px; display: flex; gap: 12px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+    #restartBtn, #immortalBtn { cursor: pointer; padding: 6px 10px; background: #fff; color: #000; border-radius: 6px; font-size: 16px; user-select: none; }
+    #restartBtn:hover, #immortalBtn:hover { background: #ccc; }
+    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(46,46,46,0.95); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-size: 24px; z-index: 100; }
+    #overlay.hidden { display: none; }
+    #winModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: #fff; display: flex; justify-content: center; align-items: center; font-size: 40px; font-family: sans-serif; z-index: 200; }
+    #winModal.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="gameWrapper">
+      <canvas id="game"></canvas>
+      <div id="hud">
+        <span id="floorInfo">Piso: 1 / 5</span>
+        <div id="restartBtn">Reiniciar</div>
+        <div id="immortalBtn">Inmortal: OFF</div>
+      </div>
+    </div>
+  </div>
+  <div id="overlay" class="hidden">
+    <p>El juego requiere una resolución mínima de 1920x1080</p>
+    <p>Aumenta el tamaño de la ventana o activa pantalla completa.</p>
+  </div>
+  <div id="winModal" class="hidden">¡Has ganado!</div>
+  <script>
+    // Activar/desactivar inmortalidad desde el botón
+    const immortalBtn = document.getElementById('immortalBtn');
+    let immortal = false;
+    window.IMMORTAL_MODE = immortal;
+
+    immortalBtn.addEventListener('click', () => {
+      immortal = !immortal;
+      immortalBtn.textContent = `Inmortal: ${immortal ? 'ON' : 'OFF'}`;
+      window.IMMORTAL_MODE = immortal;
+    });
+  </script>
+  <script src="game.js"></script>
+</body>
+</html>
