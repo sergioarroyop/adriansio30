@@ -9,6 +9,14 @@ html, body {
   font-family: 'Comic Sans MS', cursive, sans-serif;
 }
 
+/* Centrado global con flex para páginas principales */
+body.centerPage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
 #container { 
   position: relative; 
   width: 100%; 
@@ -37,7 +45,7 @@ html, body {
   justify-content: center;
   align-items: center;
   padding: clamp(1rem, 3vw, 3rem);
-  margin: clamp(1rem, 2vh, 2rem) auto;
+  margin: 0;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   gap: clamp(1rem, 2vh, 2rem);

@@ -5,30 +5,299 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fiesta - Celebración Final</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="gameStorage.js"></script>
+  <style>
+    /* Ocultación utilitaria */
+    .hidden { display: none !important; }
+
+    /* Overlay de glitch a pantalla completa */
+    #glitchOverlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0 2px, rgba(0,0,0,0.08) 2px 4px),
+        radial-gradient(circle at 20% 30%, rgba(255,0,0,0.12), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(0,255,255,0.12), transparent 40%),
+        rgba(0,0,0,0.22);
+      animation: glitchFlash 2.6s steps(14, end), noiseShift 80ms infinite;
+      mix-blend-mode: screen;
+    }
+
+    /* Capas adicionales para simular desgarro RGB y cortes horizontales */
+    #glitchOverlay::before,
+    #glitchOverlay::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    /* Desplazamiento rojo */
+    #glitchOverlay::before {
+      background: linear-gradient(90deg, rgba(255,0,0,0.25), transparent 30%, rgba(255,0,0,0.25)),
+                  repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 3px, transparent 3px 6px);
+      animation: channelShiftR 90ms steps(3, end) infinite;
+      filter: blur(0.5px);
+    }
+    /* Desplazamiento cian y bandas que se cortan */
+    #glitchOverlay::after {
+      background: linear-gradient(90deg, rgba(0,255,255,0.25), transparent 70%, rgba(0,255,255,0.25)),
+                  repeating-linear-gradient(0deg, transparent 0 6px, rgba(0,0,0,0.35) 6px 8px, transparent 8px 14px);
+      animation: channelShiftC 100ms steps(4, end) infinite, sliceShift 300ms steps(7, end) infinite;
+      filter: blur(0.5px);
+    }
+
+    @keyframes channelShiftR {
+      0% { transform: translate(0,0); }
+      50% { transform: translate(6px, -3px); }
+      100% { transform: translate(0,0); }
+    }
+    @keyframes channelShiftC {
+      0% { transform: translate(0,0); }
+      50% { transform: translate(-6px, 3px); }
+      100% { transform: translate(0,0); }
+    }
+    @keyframes sliceShift {
+      0% { clip-path: polygon(0% 6%, 100% 4%, 100% 14%, 0% 16%);
+           transform: translateX(0); }
+      15% { clip-path: polygon(0% 18%, 100% 16%, 100% 28%, 0% 30%);
+            transform: translateX(-14px); }
+      35% { clip-path: polygon(0% 36%, 100% 34%, 100% 46%, 0% 48%);
+            transform: translateX(18px); }
+      55% { clip-path: polygon(0% 54%, 100% 52%, 100% 64%, 0% 66%);
+            transform: translateX(-22px); }
+      75% { clip-path: polygon(0% 72%, 100% 70%, 100% 82%, 0% 84%);
+            transform: translateX(16px) skewX(1deg); }
+      100% { clip-path: polygon(0% 88%, 100% 86%, 100% 98%, 0% 100%);
+             transform: translateX(0); }
+    }
+
+    @keyframes noiseShift {
+      0% { filter: hue-rotate(0deg) contrast(150%); }
+      50% { filter: hue-rotate(20deg) contrast(200%); }
+      100% { filter: hue-rotate(-20deg) contrast(170%); }
+    }
+
+    @keyframes glitchFlash {
+      0%   { opacity: 0; transform: none; filter: none; }
+      5%   { opacity: 1; transform: translate(8px,-6px) skewX(3deg) scale(1.01); filter: saturate(180%) contrast(220%); }
+      12%  { opacity: 0.9; transform: translate(-10px,6px) skewX(-3deg) scale(1.02); }
+      22%  { opacity: 1; transform: translate(4px,0) scaleX(1.03) skewY(1deg); }
+      35%  { opacity: 0.85; transform: translate(-6px,3px) rotate(0.4deg); }
+      50%  { opacity: 1; transform: translate(12px,-8px) skewX(4deg) scale(1.02); }
+      65%  { opacity: 0.8; transform: translate(-8px,5px) skewY(-2deg); }
+      80%  { opacity: 1; transform: translate(6px,-4px) rotate(-0.4deg); }
+      100% { opacity: 0; transform: none; filter: none; }
+    }
+
+    /* Glitch/temblor aplicado al contenido real para que parezca que la página se rompe */
+    body.glitching #indexWrapper {
+      animation: screenJitter 45ms steps(2, end) infinite, chunkyClip 180ms steps(6, end) infinite;
+      filter: contrast(220%) saturate(200%) hue-rotate(12deg) brightness(1.1);
+    }
+    @keyframes screenJitter {
+      0% { transform: translate(0,0) skewX(1deg) skewY(0.5deg); }
+      33% { transform: translate(6px,-3px) skewX(-1.5deg) rotate(0.2deg); }
+      66% { transform: translate(-6px,4px) skewY(1deg) rotate(-0.2deg); }
+      100% { transform: translate(0,0) skewX(1deg) skewY(0.5deg); }
+    }
+    @keyframes chunkyClip {
+      0% { clip-path: inset(0 0 0 0 round 0); }
+      20% { clip-path: polygon(0% 0%,100% 0%,100% 40%,0% 34%); }
+      40% { clip-path: polygon(0% 28%,100% 34%,100% 100%,0% 100%); }
+      60% { clip-path: polygon(0% 0%,100% 0%,100% 70%,0% 64%); }
+      80% { clip-path: polygon(0% 54%,100% 60%,100% 100%,0% 100%); }
+      100% { clip-path: inset(0 0 0 0 round 0); }
+    }
+
+    /* Glitch del título durante el estallido */
+    body.glitching #birthdayTitle {
+      text-shadow:
+        3px 0 rgba(255,0,0,0.9),
+       -3px 0 rgba(0,255,255,0.9),
+        0 0 12px rgba(255,0,0,0.6);
+      animation: titleGlitch 120ms steps(2, end) infinite;
+    }
+    @keyframes titleGlitch {
+      0% { transform: translate(0,0); }
+      50% { transform: translate(3px,-2px); }
+      100% { transform: translate(-2px,2px); }
+    }
+
+    /* Pantalla oscura posterior al glitch */
+    #darkScreen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #e6e6e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 9000;
+    }
+
+    #countdownContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    #countdownTitle {
+      display: none;
+    }
+
+    #countdown {
+      font-family: 'DS-Digital','Digital-7','Seven Segment','Orbitron','Share Tech Mono','Courier New', monospace;
+      font-weight: 700;
+      font-size: clamp(2.2rem, 12vw, 8rem);
+      color: #ffffff;
+      letter-spacing: 0.2rem;
+      text-shadow: none;
+      position: relative;
+      transition: transform 120ms ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    /* Glitch de partición: duplica el texto en capas y las desplaza */
+    #countdown::before,
+    #countdown::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0; top: 0;
+      color: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Capa A: se mueve hacia la derecha y recorta franjas */
+    #countdown:hover::before,
+    #countdown.introGlitch::before {
+      opacity: 1;
+      animation: splitA 700ms steps(5, end) 2;
+    }
+    /* Capa B: se mueve hacia la izquierda y recorta otras franjas */
+    #countdown:hover::after,
+    #countdown.introGlitch::after {
+      opacity: 1;
+      animation: splitB 700ms steps(5, end) 2;
+    }
+
+    @keyframes splitA {
+      0%   { transform: translate(0,0); clip-path: inset(0 0 0 0); }
+      20%  { transform: translate(12px,0); clip-path: polygon(0 0,100% 0,100% 34%,0 40%); }
+      40%  { transform: translate(10px,0); clip-path: polygon(0 58%,100% 52%,100% 72%,0 78%); }
+      60%  { transform: translate(14px,0); clip-path: polygon(0 18%,100% 14%,100% 32%,0 36%); }
+      80%  { transform: translate(8px,0); clip-path: polygon(0 80%,100% 78%,100% 100%,0 100%); }
+      100% { transform: translate(0,0); clip-path: inset(0 0 0 0); }
+    }
+    @keyframes splitB {
+      0%   { transform: translate(0,0); clip-path: inset(0 0 0 0); }
+      20%  { transform: translate(-12px,0); clip-path: polygon(0 40%,100% 34%,100% 56%,0 60%); }
+      40%  { transform: translate(-10px,0); clip-path: polygon(0 6%,100% 0,100% 18%,0 22%); }
+      60%  { transform: translate(-14px,0); clip-path: polygon(0 68%,100% 62%,100% 84%,0 88%); }
+      80%  { transform: translate(-8px,0); clip-path: polygon(0 24%,100% 20%,100% 36%,0 40%); }
+      100% { transform: translate(0,0); clip-path: inset(0 0 0 0); }
+    }
+
+    #countdownHint { display: none; }
+  </style>
 </head>
-<body>
-  <div id="container">
-    <div id="gameWrapper">
-      <div id="hud">
-        <div id="backBtn">← Volver al Menú</div>
-      </div>
-      <div id="gameContent">
-        fiesta.html
-      </div>
+<body class="centerPage">
+  <div id="indexWrapper">
+    <div id="menuContent">
+      <h1 id="birthdayTitle">¡Lo has conseguido! ¡Bienvenido a la fiesta!</h1>
     </div>
   </div>
   
+  <!-- Overlay de glitch -->
+  <div id="glitchOverlay" class="hidden"></div>
 
+  <!-- Pantalla negra con cuenta atrás -->
+  <div id="darkScreen" class="hidden" aria-hidden="true">
+    <div id="countdownContainer" class="hidden">
+      <div id="countdown" title="Pasa el cursor para un glitch sutil">00d 00h 00m 00s</div>
+    </div>
+  </div>
   <script>
-    // ===== Elementos principales del DOM =====
-    const backBtn = document.getElementById('backBtn');
+    // Mostrar glitch a los 5s, luego ir a pantalla oscura con cuenta atrás
+    const overlay = document.getElementById('glitchOverlay');
+    const dark = document.getElementById('darkScreen');
+    const indexWrap = document.getElementById('indexWrapper');
+    const countdownEl = document.getElementById('countdown');
+    const countdownBox = document.getElementById('countdownContainer');
 
-    // ===== Event listeners =====
-    backBtn.addEventListener('click', () => {
-      window.location.href = 'index.html';
-    });
+    function getTargetDate() {
+      const now = new Date();
+      const year = now.getFullYear();
+      // Mes 8 = Septiembre (0-index)
+      let target = new Date(year, 8, 25, 21, 0, 0);
+      if (target.getTime() <= now.getTime()) {
+        target = new Date(year + 1, 8, 25, 21, 0, 0);
+      }
+      return target;
+    }
 
+    function updateCountdown() {
+      const now = new Date();
+      const diff = targetDate.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        countdownEl.textContent = '00d 00h 00m 00s';
+        return;
+      }
+
+      const sec = Math.floor(diff / 1000);
+      const days = Math.floor(sec / 86400);
+      const hours = Math.floor((sec % 86400) / 3600);
+      const mins = Math.floor((sec % 3600) / 60);
+      const secs = sec % 60;
+
+      const pad = (n) => n.toString().padStart(2, '0');
+      countdownEl.textContent = `${pad(days)}d ${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`;
+      // Mantener capas de glitch sincronizadas con el texto actual
+      countdownEl.setAttribute('data-text', countdownEl.textContent);
+    }
+
+    // Inicio: programar glitch y transición
+    const GLITCH_DELAY_MS = 5000; // 5s
+    const GLITCH_DURATION_MS = 2600; // ~2-3s
+    const BLACKOUT_MS = 2000; // 2s de pantalla negra antes del contador
+    let targetDate = getTargetDate();
+
+    setTimeout(() => {
+      // Mostrar overlay de glitch y aplicar jitter al contenido
+      overlay.classList.remove('hidden');
+      document.body.classList.add('glitching');
+
+      // Tras el glitch, cambiar a pantalla negra
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        document.body.classList.remove('glitching');
+        // Ocultar pantalla inicial verde y mostrar la oscura (solo negro)
+        if (indexWrap) indexWrap.style.display = 'none';
+        dark.classList.remove('hidden');
+        dark.removeAttribute('aria-hidden');
+        // Mantener negro 2s y luego mostrar contador y arrancar timer
+        setTimeout(() => {
+          countdownBox.classList.remove('hidden');
+          // Forzar primer render del texto y su data-text
+          updateCountdown();
+          // Glitch de aparición
+          countdownEl.classList.add('introGlitch');
+          setTimeout(() => countdownEl.classList.remove('introGlitch'), 900);
+          setInterval(updateCountdown, 1000);
+        }, BLACKOUT_MS);
+      }, GLITCH_DURATION_MS);
+    }, GLITCH_DELAY_MS);
   </script>
 </body>
 </html>
