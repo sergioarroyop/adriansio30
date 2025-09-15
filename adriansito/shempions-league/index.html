@@ -53,6 +53,7 @@
   </div>
 
   <script src="juego2.js"></script>
+  <audio id="bgBirthday" src="../../sounds/birthday.mp3" loop></audio>
   <script>
     // Panel lateral para Juego 2
     let gameStats = { score: 0, level: 1, status: '🔄 En Progreso' };
@@ -95,6 +96,14 @@
       });
     }
     document.addEventListener('DOMContentLoaded', initSidePanel);
+
+    // Audio de fondo de cumpleaños al cargar
+    (function(){
+      const a = document.getElementById('bgBirthday');
+      if (!a) return;
+      a.volume = 0.6;
+      a.play().catch(()=>{});
+    })();
 
     // Hook de actualización de stats
     function setupStatsHook() {

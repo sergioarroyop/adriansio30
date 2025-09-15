@@ -21,6 +21,7 @@
   <script src="../assets/gameStorage.js"></script>
   <script src="../assets/sidePanel.js"></script>
   <script src="juego1.js"></script>
+  <audio id="bgBirthday" src="../../sounds/birthday.mp3" loop></audio>
   <script>
     // ===== Panel Lateral para Juego 1 =====
     let gameStats = {
@@ -85,6 +86,14 @@
 
     // Inicializar panel cuando se carga la página
     document.addEventListener('DOMContentLoaded', initSidePanel);
+
+    // Audio de fondo de cumpleaños al cargar
+    (function(){
+      const a = document.getElementById('bgBirthday');
+      if (!a) return;
+      a.volume = 0.6;
+      a.play().catch(()=>{});
+    })();
 
     // Actualizar estadísticas cada frame - esperar a que game.js esté cargado
     function setupUpdateOverride() {

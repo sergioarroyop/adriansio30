@@ -96,3 +96,13 @@
   </script>
 </body>
 </html>
+<!-- Audio de fondo de cumpleaños -->
+<audio id="bgBirthday" src="../sounds/birthday.mp3" loop></audio>
+  <script>
+  (function(){
+    const a = document.getElementById('bgBirthday');
+    if (!a) return;
+    a.volume = 0.6;
+    a.play().catch(()=>{});
+  })();
+</script>

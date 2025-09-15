@@ -337,6 +337,8 @@ NO MIRES EL CÓDIGO, RATA
 </head>
 <body>
   <div id="glitchOverlay" class="hidden" aria-hidden="true"></div>
+  <audio id="bgCreepy" src="sounds/creepy.mp3" loop></audio>
+  <audio id="finalGlitchAudio" src="sounds/glitch.mp3" loop></audio>
   <header id="topBar">
     <div id="countdown" class="glitchLoop" data-text="00d 00h 00m 00s" aria-live="polite">00d 00h 00m 00s</div>
   </header>
@@ -359,8 +361,7 @@ NO MIRES EL CÓDIGO, RATA
     </form>
   </main>
   <div id="finalScreen" class="hidden" aria-hidden="true">
-    <div class="final-text" id="finalMessage">25 de Septiembre 2025, 21:00</div>
-    <div class="final-text" id="finalMessage">40.477653, -3.369680</div>
+    <div class="final-text" id="finalMessage">25 de Septiembre 2025, 20:15<br>40.477653, -3.369680</div>
   </div>
   <script>
     (() => {
@@ -372,11 +373,18 @@ NO MIRES EL CÓDIGO, RATA
       const finalScreen = document.getElementById('finalScreen');
       const finalMessage = document.getElementById('finalMessage');
       const submitButton = form.querySelector('button[type="submit"]');
+      const bgCreepy = document.getElementById('bgCreepy');
       const inputs = {
         adriansito: document.getElementById('codeAdriansito'),
         bongo: document.getElementById('codeBongo'),
         colibro: document.getElementById('codeColibro')
       };
+
+      // Sonido ambiente creepy en bucle (60%) desde la carga hasta inicio del glitch final
+      if (bgCreepy) {
+        bgCreepy.volume = 0.6;
+        bgCreepy.play().catch(()=>{});
+      }
 
       const targetDate = new Date(2025, 8, 20, 0, 0, 0); // 20/09/2025 00:00
       const unlockBongo = new Date(2025, 8, 18, 0, 0, 0); // 18/09/2025 00:00
@@ -439,12 +447,23 @@ NO MIRES EL CÓDIGO, RATA
         requestAnimationFrame(() => overlay.classList.add('active'));
         document.body.classList.add('glitch-burst');
 
+        // Sonido de glitch durante todo el final
+        const fAudio = document.getElementById('finalGlitchAudio');
+        if (fAudio) {
+          const playF = () => fAudio.play().catch(() => {});
+          fAudio.currentTime = 0;
+          playF(); // seguro: se llama tras interacción (submit)
+        }
+        // Detener el sonido de fondo creepy cuando empieza el glitch
+        if (bgCreepy) { try { bgCreepy.pause(); } catch (e) {} }
+
         const GLITCH_TOTAL_MS = 5600;
         setTimeout(() => {
           overlay.classList.remove('active');
           overlay.classList.add('hidden');
           overlay.setAttribute('aria-hidden', 'true');
           document.body.classList.remove('glitch-burst');
+          if (fAudio) { try { fAudio.pause(); } catch(e){} }
           document.body.classList.add('blackout');
           mainContent.classList.add('hidden');
           finalScreen.classList.remove('hidden');

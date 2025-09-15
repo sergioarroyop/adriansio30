@@ -176,5 +176,15 @@
       <a class="menu-link" href="colibrix/" disabled>Cuming soon...</a>
     </nav>
   </main>
+  <audio id="bgAudio" src="sounds/weird.mp3" loop></audio>
+  <script>
+    // Reproducir sonido de fondo inmediatamente al cargar
+    (function(){
+      const audio = document.getElementById('bgAudio');
+      if (!audio) return;
+      audio.volume = 0.6;
+      audio.play().catch(()=>{});
+    })();
+  </script>
 </body>
 </html>

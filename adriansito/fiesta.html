@@ -251,6 +251,8 @@
   
   <!-- Overlay de glitch -->
   <div id="glitchOverlay" class="hidden"></div>
+  <audio id="bgBirthday" src="../sounds/birthday.mp3" loop></audio>
+  <audio id="glitchAudio" src="../sounds/glitch.mp3" loop></audio>
 
   <!-- Pantalla negra con cuenta atrás -->
   <div id="darkScreen" class="hidden" aria-hidden="true">
@@ -302,11 +304,24 @@
       // Mostrar overlay de glitch y aplicar jitter al contenido
       overlay.classList.remove('hidden');
       document.body.classList.add('glitching');
+      // Sonido de glitch (intento y desbloqueo en primer gesto)
+      const gAudio = document.getElementById('glitchAudio');
+      const bAudio = document.getElementById('bgBirthday');
+      if (gAudio) {
+        const playGlitch = () => gAudio.play().catch(() => {});
+        gAudio.currentTime = 0;
+        playGlitch();
+        window.addEventListener('click', playGlitch, { once: true });
+        window.addEventListener('keydown', playGlitch, { once: true });
+        window.addEventListener('touchstart', playGlitch, { once: true });
+      }
+      if (bAudio) { try { bAudio.pause(); } catch(e){} }
 
       // Tras el glitch, cambiar a pantalla negra
       setTimeout(() => {
         overlay.classList.add('hidden');
         document.body.classList.remove('glitching');
+        if (gAudio) { try { gAudio.pause(); } catch(e){} }
         // Ocultar pantalla inicial verde y mostrar la oscura (solo negro)
         if (indexWrap) indexWrap.style.display = 'none';
         dark.classList.remove('hidden');
@@ -317,6 +332,15 @@
         }, BLACKOUT_MS);
       }, GLITCH_DURATION_MS);
     }, GLITCH_DELAY_MS);
+  </script>
+  <script>
+    // Audio de fondo de cumpleaños (60%) al cargar hasta inicio del glitch
+    (function(){
+      const a = document.getElementById('bgBirthday');
+      if (!a) return;
+      a.volume = 0.6;
+      a.play().catch(()=>{});
+    })();
   </script>
 </body>
 </html>
