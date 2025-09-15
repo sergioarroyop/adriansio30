@@ -3,28 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Descenso 5 Pisos</title>
+  <title>Alcántara en apuros</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="container">
-    <div id="gameWrapper" class="game-medium">
+    <div id="gameWrapper">
       <canvas id="game"></canvas>
-      <div id="hud">
-        <span id="floorInfo">Piso: 1 / 5</span>
-      </div>
     </div>
   </div>
-  <div id="overlay" class="hidden">
-    <p>🎮 Los juegos requieren una resolución mínima de 1920x1000</p>
-    <p>📏 Resolución actual: <span id="currentResolution"></span></p>
-    <p>💡 Aumenta el tamaño de la ventana o activa pantalla completa.</p>
+  <div id="winModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Cago en la leche Merche! Que casi llego tarde al cumpleaños.</h1>
+      <h3>¡Enhorabuena! Antonio Alcántara ha llegado a la fiesta gracias a tu ayuda.</h3>
+    </div>
   </div>
-  <div id="winModal" class="hidden">¡Has ganado!</div>
   <script src="gameStorage.js"></script>
-  <script src="resolution.js"></script>
   <script src="sidePanel.js"></script>
-  <script src="game.js"></script>
+  <script src="juego1.js"></script>
   <script>
     // ===== Panel Lateral para Juego 1 =====
     let gameStats = {
@@ -36,14 +32,13 @@
     let gameOptions = {
       immortal: false,
       sound: true,
-      difficulty: 'normal'
     };
 
     // Crear panel lateral
     function initSidePanel() {
       if (window.SidePanel) {
         window.SidePanel.createSidePanel({
-          gameName: 'Descenso 5 Pisos',
+          gameName: 'Alcántara en apuros',
           gameId: 'juego1',
           stats: gameStats,
           options: gameOptions,

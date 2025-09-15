@@ -76,35 +76,22 @@ function createSidePanel(config) {
         <span class="option-label">Sonido</span>
         <div class="toggle ${options.sound ? 'active' : ''}" id="soundToggle"></div>
       </div>
-      <div class="option-item">
-        <span class="option-label">Dificultad</span>
-        <select id="difficultySelect" style="background: #333; color: #fff; border: 1px solid #666; border-radius: 5px; padding: 5px;">
-          <option value="easy" ${options.difficulty === 'easy' ? 'selected' : ''}>Fácil</option>
-          <option value="normal" ${options.difficulty === 'normal' ? 'selected' : ''}>Normal</option>
-          <option value="hard" ${options.difficulty === 'hard' ? 'selected' : ''}>Difícil</option>
-        </select>
-      </div>
     </div>
 
     <div class="panel-section">
       <h4>🎮 Controles</h4>
       <div class="stat-item">
         <span class="stat-label">Movimiento:</span>
-        <span class="stat-value">A/D o ←/→</span>
+        <span class="stat-value">A/D</span>
       </div>
       <div class="stat-item">
         <span class="stat-label">Salto:</span>
-        <span class="stat-value">W o ESPACIO</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Reiniciar:</span>
-        <span class="stat-value">R</span>
+        <span class="stat-value">W</span>
       </div>
     </div>
 
     <button class="btn" id="backBtn">🏠 Volver al Inicio</button>
     <button class="btn secondary" id="restartBtn">🔄 Reiniciar Juego</button>
-    <button class="btn secondary" id="fullscreenBtn">📺 Pantalla Completa</button>
   `;
 
   // Event listeners

@@ -6,65 +6,52 @@
   <title>¡Feliz Cumpleaños Adrian! 🎉</title>
   <link rel="stylesheet" href="styles.css">
   <script src="gameStorage.js"></script>
-  <script src="resolution.js"></script>
 </head>
 <body>
-  <div id="container">
-    <div id="gameWrapper">
-      <!-- Globos decorativos -->
-      <div class="balloon"></div>
-      <div class="balloon"></div>
-      <div class="balloon"></div>
-      <div class="balloon"></div>
-      <div class="balloon"></div>
-      <div class="balloon"></div>
+  <div id="indexWrapper">
+    <!-- Globos decorativos -->
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    
+    <!-- Confeti -->
+    <div class="confetti" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="confetti" style="left: 20%; animation-delay: 0.5s;"></div>
+    <div class="confetti" style="left: 30%; animation-delay: 1s;"></div>
+    <div class="confetti" style="left: 40%; animation-delay: 1.5s;"></div>
+    <div class="confetti" style="left: 50%; animation-delay: 2s;"></div>
+    <div class="confetti" style="left: 60%; animation-delay: 2.5s;"></div>
+    <div class="confetti" style="left: 70%; animation-delay: 3s;"></div>
+    <div class="confetti" style="left: 80%; animation-delay: 3.5s;"></div>
+    <div class="confetti" style="left: 90%; animation-delay: 4s;"></div>
+    
+    <div id="menuContent">
+      <h1 id="birthdayTitle">¡Feliz Cumpleaños Adrian!</h1>
       
-      <!-- Confeti -->
-      <div class="confetti" style="left: 10%; animation-delay: 0s;"></div>
-      <div class="confetti" style="left: 20%; animation-delay: 0.5s;"></div>
-      <div class="confetti" style="left: 30%; animation-delay: 1s;"></div>
-      <div class="confetti" style="left: 40%; animation-delay: 1.5s;"></div>
-      <div class="confetti" style="left: 50%; animation-delay: 2s;"></div>
-      <div class="confetti" style="left: 60%; animation-delay: 2.5s;"></div>
-      <div class="confetti" style="left: 70%; animation-delay: 3s;"></div>
-      <div class="confetti" style="left: 80%; animation-delay: 3.5s;"></div>
-      <div class="confetti" style="left: 90%; animation-delay: 4s;"></div>
+      <div id="birthdayMessage">
+        ¡Felicidades Adrian! 🎂 Tu fiesta de cumpleaños está en PELIGRO! 
+        Hay invitados que tienen problemas para llegar y todavía no tenemos la comida. 
+        ¡Tienes que ayudar a los invitados que llegan tarde y recuperar la comida 
+        antes de que sea demasiado tarde! ¡La celebración más épica del año depende de ti! 🎊
+      </div>
+   
+      <div id="partyStatus">
+        🚨 Estado de la Fiesta: ¡EMERGENCIA! ¡Necesitamos un milagro en el 93! 🚨
+      </div>
       
-      <div id="menuContent">
-        <h1 id="birthdayTitle">🎉 ¡Feliz Cumpleaños Adrian! 🎉</h1>
-        
-        <div id="birthdayMessage">
-          ¡Felicidades Adrian! 🎂 Tu fiesta de cumpleaños está en PELIGRO! 
-          Los invitados están atrapados y la comida se está escapando. 
-          ¡Tienes que ayudar a rescatar a todos los invitados y recuperar la comida 
-          antes de que sea demasiado tarde! ¡La celebración más épica del año depende de ti! 🎊
-        </div>
-        
-        <div id="partyStatus">
-          🚨 Estado de la Fiesta: ¡EMERGENCIA! ¡Necesitamos un HÉROE! 🚨
-        </div>
-        
-        <div id="gameLinks">
-          <a href="juego1.html" class="gameLink">🎮 Juego 1 - Descenso 5 Pisos</a>
-          <a href="juego2.html" class="gameLink">🎮 Juego 2 - Rescate de Invitados</a>
-          <a href="juego3.html" class="gameLink">🎮 Juego 3 - Aventura Épica</a>
-          <a href="fiesta.html" class="gameLink locked" id="fiestaLink">🎉 Fiesta - Celebración Final</a>
-        </div>
+      <div id="gameLinks">
+        <a href="juego1.html" class="gameLink">🎮 Juego 1 - Alcántara en apuros</a>
+        <a href="juego2.html" class="gameLink">🎮 Juego 2 - El bixo</a>
+        <a href="juego3.html" class="gameLink">🎮 Juego 3 - Lluvia de tacos</a>
+        <a href="fiesta.html" class="gameLink locked" id="fiestaLink">🎉 Fiesta - Celebración Final</a>
       </div>
     </div>
-  </div>
-  
-  <div id="overlay" class="hidden">
-    <p>🎮 Los juegos requieren una resolución mínima de 1920x1000</p>
-    <p>📏 Resolución actual: <span id="currentResolution"></span></p>
-    <p>💡 Aumenta el tamaño de la ventana o activa pantalla completa.</p>
-  </div>
+  </div>  
   
   <script>
-    
-    // El sistema de verificación de resolución se maneja automáticamente
-    // a través de gameStorage.js con resolución mínima de 1920x1080
-    
     // Crear más confeti dinámicamente
     function createConfetti() {
       for (let i = 0; i < 20; i++) {
@@ -73,12 +60,39 @@
         confetti.style.left = Math.random() * 100 + '%';
         confetti.style.animationDelay = Math.random() * 3 + 's';
         confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        document.getElementById('gameWrapper').appendChild(confetti);
+        document.getElementById('indexWrapper').appendChild(confetti);
       }
     }
     
     // Crear confeti cada 4 segundos
     setInterval(createConfetti, 4000);
+    
+    // Funciones para el modal responsive
+    function openInfoModal() {
+      const modal = document.getElementById('infoModal');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+    }
+    
+    function closeInfoModal() {
+      const modal = document.getElementById('infoModal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto'; // Restaurar scroll del body
+    }
+    
+    // Cerrar modal al hacer clic fuera del contenido
+    document.getElementById('infoModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeInfoModal();
+      }
+    });
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeInfoModal();
+      }
+    });
   </script>
 </body>
 </html>

@@ -200,11 +200,12 @@ function showProgressMessage() {
   
   if (statusElement) {
     if (progress.allCompleted) {
-      statusElement.innerHTML = '🎉 ¡Fiesta DESBLOQUEADA! ¡Todos los juegos completados! 🎉';
+      statusElement.innerHTML = '🎉 ¡Fiesta DESBLOQUEADA! 🎉';
       statusElement.style.color = '#4CAF50';
     } else {
-      statusElement.innerHTML = `🚨 Progreso: ${progress.completed}/${progress.total} juegos completados (${progress.percentage}%) 🚨`;
-      statusElement.style.color = '#FF9800';
+      statusElement.innerHTML = `🚨 Estado de la Fiesta: ¡Necesitamos un milagro en el 93! 🚨<br>
+      Progreso: ${progress.completed}/${progress.total} juegos completados (${progress.percentage}%)
+      `;
     }
   }
 }

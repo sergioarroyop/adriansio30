@@ -3,435 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Juego 2 - T-Rex Runner</title>
-  <style>
-    html, body { 
-      margin: 0; 
-      padding: 0; 
-      background: #2e2e2e; 
-      color: #fff; 
-      height: 100%; 
-      overflow: hidden; 
-      font-family: sans-serif;
-    }
-    
-    #container { 
-      position: relative; 
-      width: 100%; 
-      height: 100%; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-    }
-    
-    #gameWrapper { 
-      background: #eee; 
-      border: 20px solid #2e2e2e; 
-      box-sizing: content-box; 
-      position: relative;
-      width: 600px;
-      height: 150px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    #gameCanvas {
-      display: block;
-      background: #eee;
-    }
-    
-    #hud {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0,0,0,0.65);
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-family: sans-serif;
-      font-size: 16px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
-    
-    #restartBtn {
-      cursor: pointer;
-      padding: 6px 10px;
-      background: #fff;
-      color: #000;
-      border-radius: 6px;
-      font-size: 14px;
-      user-select: none;
-    }
-    
-    #restartBtn:hover {
-      background: #ccc;
-    }
-    
-    #overlay { 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      background: rgba(46,46,46,0.95); 
-      color: #fff; 
-      display: flex; 
-      flex-direction: column; 
-      justify-content: center; 
-      align-items: center; 
-      font-family: sans-serif; 
-      font-size: 24px; 
-      z-index: 100; 
-    }
-    
-    #overlay.hidden { 
-      display: none; 
-    }
-    
-    #gameOverModal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-size: 40px;
-      font-family: sans-serif;
-      z-index: 200;
-    }
-    
-    #gameOverModal.hidden {
-      display: none;
-    }
-    
-    #scoreDisplay {
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-    
-    #instructions {
-      font-size: 18px;
-      text-align: center;
-      margin-top: 20px;
-      color: #ccc;
-    }
-  </style>
+  <title>Alcántara en apuros</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div id="container">
     <div id="gameWrapper">
-      <canvas id="gameCanvas" width="600" height="150"></canvas>
-      <div id="hud">
-        <span id="scoreInfo">Puntuación: 0</span>
-        <div id="restartBtn">Reiniciar</div>
-      </div>
+      <canvas id="game"></canvas>
     </div>
   </div>
-  
-  <div id="overlay" class="hidden">
-    <p>🎮 Los juegos requieren una resolución mínima de 1920x1000</p>
-    <p>📏 Resolución actual: <span id="currentResolution"></span></p>
-    <p>💡 Aumenta el tamaño de la ventana o activa pantalla completa.</p>
-  </div>
-  
-  <div id="gameOverModal" class="hidden">
-    <div id="scoreDisplay">¡Juego Terminado!</div>
-    <div>Puntuación Final: <span id="finalScore">0</span></div>
-    <div id="restartBtn" style="margin-top: 20px; font-size: 24px; padding: 15px 30px;">Jugar de Nuevo</div>
-  </div>
-  
-  <div id="instructions">
-    <p>🎮 Instrucciones: Presiona ESPACIO para saltar y evitar obstáculos</p>
-    <p>Mantén presionado ESPACIO para saltar más alto</p>
-  </div>
-
+  <div id="winModal" class="hidden">¡Has ganado!</div>
   <script src="gameStorage.js"></script>
-  <script src="resolution.js"></script>
   <script src="sidePanel.js"></script>
+  <script src="juego2.js"></script>
   <script>
-    // ===== Elementos principales del DOM =====
-    const container = document.getElementById('container');
-    const wrapper = document.getElementById('gameWrapper');
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const scoreInfo = document.getElementById('scoreInfo');
-    const restartBtn = document.getElementById('restartBtn');
-    const overlay = document.getElementById('overlay');
-    const gameOverModal = document.getElementById('gameOverModal');
-    const finalScore = document.getElementById('finalScore');
-
-    // ===== Constantes del juego =====
-    const GAME_WIDTH = 600;
-    const GAME_HEIGHT = 150;
-    const GRAVITY = 0.6;
-    const JUMP_FORCE = -12;
-    const SPEED = 2;
-    const OBSTACLE_SPEED = 3;
-
-    // ===== Estado del juego =====
-    let gameRunning = false;
-    let score = 0;
-    let gameSpeed = 1;
-    let obstacles = [];
-    let clouds = [];
-    let groundY = GAME_HEIGHT - 20;
-
-    // ===== Jugador (T-Rex) =====
-    const player = {
-      x: 50,
-      y: groundY - 40,
-      width: 40,
-      height: 40,
-      velocityY: 0,
-      onGround: false,
-      color: '#535353',
-      jumping: false
-    };
-
-    // ===== Control de teclas =====
-    const keys = {};
-    document.addEventListener('keydown', e => {
-      keys[e.code] = true;
-      if (e.code === 'Space' && gameRunning && player.onGround) {
-        player.velocityY = JUMP_FORCE;
-        player.onGround = false;
-        player.jumping = true;
-      }
-      if (e.code === 'Space' && !gameRunning) {
-        startGame();
-      }
-    });
-    
-    document.addEventListener('keyup', e => {
-      keys[e.code] = false;
-      if (e.code === 'Space') {
-        player.jumping = false;
-      }
-    });
-
-    // ===== Función para crear obstáculos =====
-    function createObstacle() {
-      const types = ['cactus', 'bird'];
-      const type = types[Math.floor(Math.random() * types.length)];
-      
-      if (type === 'cactus') {
-        obstacles.push({
-          x: GAME_WIDTH,
-          y: groundY - 40,
-          width: 20,
-          height: 40,
-          color: '#535353',
-          type: 'cactus'
-        });
-      } else {
-        obstacles.push({
-          x: GAME_WIDTH,
-          y: groundY - 60,
-          width: 30,
-          height: 20,
-          color: '#535353',
-          type: 'bird',
-          velocityY: Math.random() * 2 - 1
-        });
-      }
-    }
-
-    // ===== Función para crear nubes =====
-    function createCloud() {
-      clouds.push({
-        x: GAME_WIDTH,
-        y: Math.random() * 50 + 20,
-        width: 30,
-        height: 15,
-        speed: Math.random() * 0.5 + 0.5
-      });
-    }
-
-    // ===== Función para verificar colisiones =====
-    function checkCollision(rect1, rect2) {
-      return rect1.x < rect2.x + rect2.width &&
-             rect1.x + rect1.width > rect2.x &&
-             rect1.y < rect2.y + rect2.height &&
-             rect1.y + rect1.height > rect2.y;
-    }
-
-    // ===== Función para actualizar el juego =====
-    function update() {
-      if (!gameRunning) return;
-
-      // Actualizar jugador
-      player.velocityY += GRAVITY;
-      player.y += player.velocityY;
-
-      // Verificar si está en el suelo
-      if (player.y >= groundY - 40) {
-        player.y = groundY - 40;
-        player.velocityY = 0;
-        player.onGround = true;
-      }
-
-      // Actualizar obstáculos
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        const obstacle = obstacles[i];
-        obstacle.x -= OBSTACLE_SPEED * gameSpeed;
-
-        // Movimiento de pájaros
-        if (obstacle.type === 'bird') {
-          obstacle.y += obstacle.velocityY;
-          if (obstacle.y < groundY - 80 || obstacle.y > groundY - 40) {
-            obstacle.velocityY *= -1;
-          }
-        }
-
-        // Verificar colisión con jugador
-        if (checkCollision(player, obstacle)) {
-          gameOver();
-          return;
-        }
-
-        // Eliminar obstáculos que salieron de pantalla
-        if (obstacle.x + obstacle.width < 0) {
-          obstacles.splice(i, 1);
-        }
-      }
-
-      // Actualizar nubes
-      for (let i = clouds.length - 1; i >= 0; i--) {
-        const cloud = clouds[i];
-        cloud.x -= cloud.speed;
-
-        if (cloud.x + cloud.width < 0) {
-          clouds.splice(i, 1);
-        }
-      }
-
-      // Crear nuevos obstáculos y nubes
-      if (Math.random() < 0.02) {
-        createObstacle();
-      }
-      if (Math.random() < 0.01) {
-        createCloud();
-      }
-
-      // Aumentar velocidad del juego
-      gameSpeed += 0.001;
-      score += 1;
-
-      // Actualizar HUD
-      scoreInfo.textContent = `Puntuación: ${score}`;
-    }
-
-    // ===== Función para dibujar =====
-    function draw() {
-      // Limpiar canvas
-      ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-      // Dibujar fondo
-      ctx.fillStyle = '#f7f7f7';
-      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-      // Dibujar suelo
-      ctx.fillStyle = '#535353';
-      ctx.fillRect(0, groundY, GAME_WIDTH, 20);
-
-      // Dibujar nubes
-      clouds.forEach(cloud => {
-        ctx.fillStyle = '#d6d6d6';
-        ctx.fillRect(cloud.x, cloud.y, cloud.width, cloud.height);
-      });
-
-      // Dibujar jugador (T-Rex)
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-      
-      // Dibujar detalles del T-Rex
-      ctx.fillStyle = '#000';
-      ctx.fillRect(player.x + 5, player.y + 5, 3, 3); // ojo
-      ctx.fillRect(player.x + 15, player.y + 5, 3, 3); // ojo
-      ctx.fillRect(player.x + 8, player.y + 15, 8, 3); // boca
-
-      // Dibujar obstáculos
-      obstacles.forEach(obstacle => {
-        ctx.fillStyle = obstacle.color;
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-        
-        if (obstacle.type === 'cactus') {
-          // Dibujar espinas del cactus
-          ctx.fillStyle = '#2d5016';
-          ctx.fillRect(obstacle.x + 5, obstacle.y, 3, obstacle.height);
-          ctx.fillRect(obstacle.x + 12, obstacle.y, 3, obstacle.height);
-        } else if (obstacle.type === 'bird') {
-          // Dibujar alas del pájaro
-          ctx.fillStyle = '#000';
-          ctx.fillRect(obstacle.x + 5, obstacle.y + 5, 8, 3);
-          ctx.fillRect(obstacle.x + 15, obstacle.y + 5, 8, 3);
-        }
-      });
-
-      // Dibujar mensaje de inicio
-      if (!gameRunning) {
-        ctx.fillStyle = '#535353';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Presiona ESPACIO para empezar', GAME_WIDTH/2, GAME_HEIGHT/2);
-        ctx.font = '16px Arial';
-        ctx.fillText('¡Evita los obstáculos!', GAME_WIDTH/2, GAME_HEIGHT/2 + 30);
-      }
-    }
-
-    // ===== Función para iniciar el juego =====
-    function startGame() {
-      gameRunning = true;
-      score = 0;
-      gameSpeed = 1;
-      obstacles = [];
-      clouds = [];
-      player.y = groundY - 40;
-      player.velocityY = 0;
-      player.onGround = true;
-      player.jumping = false;
-      gameOverModal.classList.add('hidden');
-    }
-
-    // ===== Función para terminar el juego =====
-    function gameOver() {
-      gameRunning = false;
-      finalScore.textContent = score;
-      gameOverModal.classList.remove('hidden');
-      
-      // Guardar progreso en localStorage
-      if (window.GameStorage) {
-        window.GameStorage.onJuego2Complete(score);
-        console.log(`Juego 2 completado: T-Rex Runner con ${score} puntos`);
-      }
-    }
-
-    // ===== Event listeners =====
-    restartBtn.addEventListener('click', startGame);
-
-    // ===== Verificar resolución =====
-    // El sistema de verificación de resolución se maneja automáticamente
-    // a través de gameStorage.js con resolución mínima de 1920x1080
-
-    // ===== Bucle principal =====
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
-    }
-
-    // ===== Inicializar =====
-    gameLoop();
-
-    // ===== Panel Lateral para Juego 2 =====
+    // ===== Panel Lateral para Juego 1 =====
     let gameStats = {
       score: 0,
       level: 1,
@@ -441,23 +27,32 @@
     let gameOptions = {
       immortal: false,
       sound: true,
-      difficulty: 'normal'
     };
 
     // Crear panel lateral
     function initSidePanel() {
       if (window.SidePanel) {
         window.SidePanel.createSidePanel({
-          gameName: 'T-Rex Runner',
-          gameId: 'juego2',
+          gameName: 'Alcántara en apuros',
+          gameId: 'juego1',
           stats: gameStats,
           options: gameOptions,
           onBack: () => window.location.href = 'index.html',
-          onRestart: startGame,
+          onRestart: () => {
+            if (typeof resetGame === 'function') {
+              resetGame();
+            }
+          },
           onOptionChange: (newOptions) => {
             gameOptions = { ...gameOptions, ...newOptions };
             if (window.GameStorage) {
               window.GameStorage.updateGameOptions(gameOptions);
+            }
+            
+            // Aplicar modo inmortal directamente
+            if (newOptions.immortal !== undefined) {
+              window.IMMORTAL_MODE = newOptions.immortal;
+              console.log(`Modo inmortal: ${newOptions.immortal ? 'ACTIVADO' : 'DESACTIVADO'}`);
             }
           }
         });
@@ -467,9 +62,8 @@
     // Actualizar estadísticas del panel
     function updatePanelStats() {
       if (window.SidePanel) {
-        gameStats.score = score || 0;
-        gameStats.level = Math.floor(score / 100) + 1;
-        gameStats.status = gameRunning ? '🔄 En Progreso' : '⏸️ Pausado';
+        gameStats.level = currentFloor || 1;
+        gameStats.score = Math.floor((currentFloor || 1) * 100);
         window.SidePanel.updateSidePanelStats(gameStats);
       }
     }
@@ -477,12 +71,22 @@
     // Inicializar panel cuando se carga la página
     document.addEventListener('DOMContentLoaded', initSidePanel);
 
-    // Actualizar estadísticas cada frame
-    const originalUpdate = update;
-    update = function() {
-      originalUpdate();
-      updatePanelStats();
-    };
+    // Actualizar estadísticas cada frame - esperar a que game.js esté cargado
+    function setupUpdateOverride() {
+      if (typeof update === 'function') {
+        const originalUpdate = update;
+        update = function() {
+          originalUpdate();
+          updatePanelStats();
+        };
+      } else {
+        // Si update no está disponible aún, reintentar en el siguiente frame
+        requestAnimationFrame(setupUpdateOverride);
+      }
+    }
+    
+    // Configurar la sobrescritura de update después de que se cargue game.js
+    setTimeout(setupUpdateOverride, 100);
   </script>
 </body>
 </html>
