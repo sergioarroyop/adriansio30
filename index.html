@@ -176,14 +176,19 @@
       <a class="menu-link" href="colibrix/" disabled>Cuming soon...</a>
     </nav>
   </main>
-  <audio id="bgAudio" src="sounds/weird.mp3" loop></audio>
+  <audio id="bgAudio" src="sounds/weird.mp3" loop autoplay muted playsinline></audio>
   <script>
-    // Reproducir sonido de fondo inmediatamente al cargar
+    // Reproducir sonido de fondo inmediatamente al cargar (autoplay seguro)
     (function(){
       const audio = document.getElementById('bgAudio');
       if (!audio) return;
       audio.volume = 0.6;
-      audio.play().catch(()=>{});
+      // Intento de reproducción (debería iniciar por tener muted+autoplay)
+      const p = audio.play(); if (p && p.catch) p.catch(()=>{});
+      // Desmutear tras un breve retardo para que sea audible
+      audio.addEventListener('canplay', () => {
+        setTimeout(() => { try { audio.muted = false; } catch(e){} }, 150);
+      }, { once: true });
     })();
   </script>
 </body>

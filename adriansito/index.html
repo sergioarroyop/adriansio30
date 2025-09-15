@@ -70,22 +70,31 @@
     // Funciones para el modal responsive
     function openInfoModal() {
       const modal = document.getElementById('infoModal');
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+      }
     }
     
     function closeInfoModal() {
       const modal = document.getElementById('infoModal');
-      modal.classList.add('hidden');
-      document.body.style.overflow = 'auto'; // Restaurar scroll del body
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto'; // Restaurar scroll del body
+      }
     }
     
-    // Cerrar modal al hacer clic fuera del contenido
-    document.getElementById('infoModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeInfoModal();
+    // Cerrar modal al hacer clic fuera del contenido (si existe)
+    (function(){
+      const infoModalEl = document.getElementById('infoModal');
+      if (infoModalEl) {
+        infoModalEl.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeInfoModal();
+          }
+        });
       }
-    });
+    })();
     
     // Cerrar modal con tecla Escape
     document.addEventListener('keydown', function(e) {
