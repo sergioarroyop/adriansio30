@@ -3,90 +3,114 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Alcántara en apuros</title>
+  <title>Shempions League</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Ajustes mínimos específicos del runner */
+    #distanceLabel { position:absolute; top:12px; right:20px; color:#333; font-weight:bold; }
+  </style>
+  <script src="gameStorage.js"></script>
+  <script src="sidePanel.js"></script>
 </head>
 <body>
   <div id="container">
     <div id="gameWrapper">
+      <span id="distanceLabel"></span>
       <canvas id="game"></canvas>
     </div>
   </div>
-  <div id="winModal" class="hidden">¡Has ganado!</div>
-  <script src="gameStorage.js"></script>
-  <script src="sidePanel.js"></script>
+
+  <div id="winModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡GOL EN EL 93! 🏆⚽</h1>
+      <h3>El bixo lo consiguió: La Champiooooooooooooons.</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="winBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="winRestartBtn">Jugar de nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Qué inyustisia...! 😵</h1>
+      <h3>Inténtalo de nuevo para marcar en el 93.</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="overBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="overRestartBtn">Reintentar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="startModal">
+    <div class="modal-content">
+      <h1>⚽ ¡SIIIU! ⚽</h1>
+      <h2>El bixo necesita tu ayuda para ganar la Champions y llevar el trofeo a tu cumpleaños. Ayúdale a sortear a Mepsi y los fueras de juego para marcar en el 93.</h2>
+      <div class="modal-actions">
+        <button class="modal-btn" id="startBtn">Comenzar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="juego2.js"></script>
   <script>
-    // ===== Panel Lateral para Juego 1 =====
-    let gameStats = {
-      score: 0,
-      level: 1,
-      status: '🔄 En Progreso'
-    };
+    // Panel lateral para Juego 2
+    let gameStats = { score: 0, level: 1, status: '🔄 En Progreso' };
+    let gameOptions = { cr7: false };
 
-    let gameOptions = {
-      immortal: false,
-      sound: true,
-    };
-
-    // Crear panel lateral
     function initSidePanel() {
-      if (window.SidePanel) {
-        window.SidePanel.createSidePanel({
-          gameName: 'Alcántara en apuros',
-          gameId: 'juego1',
-          stats: gameStats,
-          options: gameOptions,
-          onBack: () => window.location.href = 'index.html',
-          onRestart: () => {
-            if (typeof resetGame === 'function') {
-              resetGame();
-            }
-          },
-          onOptionChange: (newOptions) => {
-            gameOptions = { ...gameOptions, ...newOptions };
-            if (window.GameStorage) {
-              window.GameStorage.updateGameOptions(gameOptions);
-            }
-            
-            // Aplicar modo inmortal directamente
-            if (newOptions.immortal !== undefined) {
-              window.IMMORTAL_MODE = newOptions.immortal;
-              console.log(`Modo inmortal: ${newOptions.immortal ? 'ACTIVADO' : 'DESACTIVADO'}`);
-            }
+      if (!window.SidePanel) return;
+      window.SidePanel.createSidePanel({
+        gameName: 'Shempions League',
+        gameId: 'juego2',
+        stats: gameStats,
+        options: gameOptions,
+        optionsTemplate: `
+          <div class=\"panel-section\">
+            <h4>⚙️ Opciones</h4>
+            <div class=\"option-item\">
+              <span class=\"option-label\">Modo CR7</span>
+              <div class=\"toggle ${gameOptions.cr7 ? 'active' : ''}\" id=\"cr7Toggle\"></div>
+            </div>
+          </div>
+          <button class=\"btn secondary\" id=\"fullscreenBtn\">⛶ Pantalla completa</button>
+        `,
+        initOptions: (panel, onOptionChange) => {
+          const cr7 = panel.querySelector('#cr7Toggle');
+          if (cr7) {
+            cr7.addEventListener('click', function(){
+              this.classList.toggle('active');
+              const active = this.classList.contains('active');
+              onOptionChange({ cr7: active });
+            });
           }
-        });
-      }
+        },
+        onBack: () => window.location.href = 'index.html',
+        onRestart: () => { if (typeof resetGame === 'function') resetGame(); },
+        onOptionChange: (opts) => {
+          gameOptions = { ...gameOptions, ...opts };
+          if (window.GameStorage) window.GameStorage.updateGameOptions(gameOptions);
+          if (opts.cr7 !== undefined && typeof setCR7Mode === 'function') setCR7Mode(opts.cr7);
+        }
+      });
     }
-
-    // Actualizar estadísticas del panel
-    function updatePanelStats() {
-      if (window.SidePanel) {
-        gameStats.level = currentFloor || 1;
-        gameStats.score = Math.floor((currentFloor || 1) * 100);
-        window.SidePanel.updateSidePanelStats(gameStats);
-      }
-    }
-
-    // Inicializar panel cuando se carga la página
     document.addEventListener('DOMContentLoaded', initSidePanel);
 
-    // Actualizar estadísticas cada frame - esperar a que game.js esté cargado
-    function setupUpdateOverride() {
-      if (typeof update === 'function') {
-        const originalUpdate = update;
-        update = function() {
-          originalUpdate();
-          updatePanelStats();
-        };
-      } else {
-        // Si update no está disponible aún, reintentar en el siguiente frame
-        requestAnimationFrame(setupUpdateOverride);
+    // Hook de actualización de stats
+    function setupStatsHook() {
+      if (typeof getCurrentScore === 'function') {
+        setInterval(() => {
+          try {
+            const s = getCurrentScore();
+            gameStats.score = Math.floor(s);
+            gameStats.level = Math.max(1, Math.floor(s / 10));
+            gameStats.status = WIN_STATE ? '✅ En el 93' : '🔄 En Progreso';
+            if (window.SidePanel) window.SidePanel.updateSidePanelStats(gameStats);
+          } catch {}
+        }, 500);
       }
     }
-    
-    // Configurar la sobrescritura de update después de que se cargue game.js
-    setTimeout(setupUpdateOverride, 100);
+    setTimeout(setupStatsHook, 500);
   </script>
 </body>
 </html>

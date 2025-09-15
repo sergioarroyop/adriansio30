@@ -42,6 +42,16 @@
           gameId: 'juego1',
           stats: gameStats,
           options: gameOptions,
+          optionsTemplate: `
+            <div class="panel-section">
+              <h4>⚙️ Opciones</h4>
+              <div class="option-item">
+                <span class="option-label">Modo Inmortal</span>
+                <div class="toggle ${gameOptions.immortal ? 'active' : ''}" id="immortalToggle"></div>
+              </div>
+            </div>
+            <button class="btn secondary" id="fullscreenBtn">⛶ Pantalla completa</button>
+          `,
           onBack: () => window.location.href = 'index.html',
           onRestart: () => {
             if (typeof resetGame === 'function') {
