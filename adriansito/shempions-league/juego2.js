@@ -39,7 +39,7 @@
 
   // Estado
   const gravity = 0.0022; // px/ms^2
-  const baseSpeed = 0.45; // px/ms
+  const baseSpeed = 0.6; // px/ms
   let gameSpeed = baseSpeed;   // px/ms
   const speedPerPoint = 0.005; // incremento gradual en función de la puntuación
   let CR7_MODE = false;

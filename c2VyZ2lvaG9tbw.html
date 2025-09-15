@@ -338,7 +338,13 @@
           }
           return;
         }
-        if (correctCount > 0) setFeedback('Uno menos...'); else setFeedback('Vuelve a intentarlo.');
+        if (correctCount == 1) {
+          setFeedback('Uno menos...'); 
+        } else if (correctCount == 2) {
+          setFeedback('Solo queda uno...');
+        } else {
+          setFeedback('Vuelve a intentarlo.');
+        }
       });
 
       form.addEventListener('input', () => { if (!finaleTriggered) setFeedback(''); });
