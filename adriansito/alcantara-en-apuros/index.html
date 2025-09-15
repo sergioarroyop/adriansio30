@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Alcántara en apuros</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <div id="container">
@@ -18,8 +18,8 @@
       <h3>¡Enhorabuena! Antonio Alcántara ha llegado a la fiesta gracias a tu ayuda.</h3>
     </div>
   </div>
-  <script src="gameStorage.js"></script>
-  <script src="sidePanel.js"></script>
+  <script src="../assets/gameStorage.js"></script>
+  <script src="../assets/sidePanel.js"></script>
   <script src="juego1.js"></script>
   <script>
     // ===== Panel Lateral para Juego 1 =====
@@ -52,7 +52,7 @@
             </div>
             <button class="btn secondary" id="fullscreenBtn">⛶ Pantalla completa</button>
           `,
-          onBack: () => window.location.href = 'index.html',
+          onBack: () => window.location.href = '../index.html',
           onRestart: () => {
             if (typeof resetGame === 'function') {
               resetGame();

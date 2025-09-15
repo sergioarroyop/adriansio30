@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>¡Feliz Cumpleaños Adrian! 🎉</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/gameStorage.js"></script>
+</head>
+<body class="centerPage">
+  <div id="indexWrapper">
+    <!-- Globos decorativos -->
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    <div class="balloon"></div>
+    
+    <!-- Confeti -->
+    <div class="confetti" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="confetti" style="left: 20%; animation-delay: 0.5s;"></div>
+    <div class="confetti" style="left: 30%; animation-delay: 1s;"></div>
+    <div class="confetti" style="left: 40%; animation-delay: 1.5s;"></div>
+    <div class="confetti" style="left: 50%; animation-delay: 2s;"></div>
+    <div class="confetti" style="left: 60%; animation-delay: 2.5s;"></div>
+    <div class="confetti" style="left: 70%; animation-delay: 3s;"></div>
+    <div class="confetti" style="left: 80%; animation-delay: 3.5s;"></div>
+    <div class="confetti" style="left: 90%; animation-delay: 4s;"></div>
+    
+    <div id="menuContent">
+      <h1 id="birthdayTitle">¡Feliz Cumpleaños Adrián!</h1>
+      
+      <div id="birthdayMessage">
+        ¡Felicidades Adrián! 🎂 Tu fiesta de cumpleaños está en PELIGRO! 
+        Hay invitados que tienen problemas para llegar y todavía no tenemos la comida. 
+        ¡Tienes que ayudar a los invitados que llegan tarde y recuperar la comida 
+        antes de que sea demasiado tarde! ¡La celebración más épica del año depende de ti! 🎊
+      </div>
+   
+      <div id="partyStatus">
+        🚨 Estado de la Fiesta: ¡EMERGENCIA! ¡Necesitamos un milagro en el 93! 🚨
+      </div>
+      
+      <div id="gameLinks">
+        <a href="alcantara-en-apuros/index.html" class="gameLink">🎮 Alcántara en apuros</a>
+        <a href="shempions-league/index.html" class="gameLink">🎮 Shempions League</a>
+        <a href="pesadilla-cocina/index.html" class="gameLink">🎮 Pesadilla en la cocina</a>
+        <a href="fiesta.html" class="gameLink locked" id="fiestaLink">🎉 Fiesta - Celebración Final</a>
+      </div>
+    </div>
+  </div>  
+  
+  <script>
+    // Crear más confeti dinámicamente
+    function createConfetti() {
+      for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        document.getElementById('indexWrapper').appendChild(confetti);
+      }
+    }
+    
+    // Crear confeti cada 4 segundos
+    setInterval(createConfetti, 4000);
+    
+    // Funciones para el modal responsive
+    function openInfoModal() {
+      const modal = document.getElementById('infoModal');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+    }
+    
+    function closeInfoModal() {
+      const modal = document.getElementById('infoModal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto'; // Restaurar scroll del body
+    }
+    
+    // Cerrar modal al hacer clic fuera del contenido
+    document.getElementById('infoModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeInfoModal();
+      }
+    });
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeInfoModal();
+      }
+    });
+  </script>
+</body>
+</html>

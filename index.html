@@ -3,96 +3,178 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>¡Feliz Cumpleaños Adrian! 🎉</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="gameStorage.js"></script>
+  <title>Cum project</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', 'Segoe UI', Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at 18% -10%, rgba(64, 70, 120, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 130%, rgba(46, 57, 106, 0.18) 0%, transparent 45%),
+        linear-gradient(160deg, #02040a 0%, #040309 40%, #000104 100%);
+      color: #c9d0ff;
+      overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: -10vmax;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 4px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.009) 0 1px, transparent 1px 6px);
+      opacity: 0.18;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      animation: scanlines 12s linear infinite;
+    }
+    body::after {
+      content: none; /* overlay oscuro desactivado */
+    }
+    main {
+      position: relative;
+      text-align: center;
+      padding: 3.6rem 3.2rem;
+      border-radius: 26px;
+      background: rgba(6, 9, 21, 0.88);
+      border: 1px solid rgba(112, 138, 208, 0.42);
+      box-shadow:
+        0 30px 70px rgba(0, 0, 0, 0.78),
+        0 0 50px rgba(47, 60, 135, 0.22);
+      backdrop-filter: blur(18px) saturate(140%);
+      overflow: hidden;
+    }
+    main::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 4px);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .glitch-title {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 1rem;
+      font-size: clamp(2.5rem, 6vw, 3.6rem);
+      letter-spacing: 0.32rem;
+      text-transform: uppercase;
+      color: transparent;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(168, 229, 255, 0.9), rgba(222, 255, 248, 0.97));
+      -webkit-background-clip: text;
+      background-clip: text;
+      filter: drop-shadow(0 0 18px rgba(160, 232, 255, 0.75)) drop-shadow(0 0 32px rgba(180, 246, 255, 0.65));
+      animation: titlePulse 4s ease-in-out infinite alternate;
+    }
+    .glitch-title::before,
+    .glitch-title::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      color: rgba(205, 234, 255, 0.9);
+      mix-blend-mode: screen;
+      text-shadow: 0 0 14px rgba(170, 230, 255, 0.55);
+      animation: titleGlitch 1.6s steps(2, end) infinite;
+      pointer-events: none;
+    }
+    .glitch-title::before {
+      transform: translate(-4px, -3px);
+      clip-path: polygon(0 0, 100% 0, 100% 50%, 0 60%);
+      color: rgba(129, 232, 255, 0.95);
+    }
+    .glitch-title::after {
+      transform: translate(4px, 2px);
+      clip-path: polygon(0 40%, 100% 35%, 100% 100%, 0 100%);
+      color: rgba(255, 158, 215, 0.88);
+      animation-delay: 150ms;
+    }
+    @keyframes scanlines {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(8px); }
+    }
+    @keyframes gloomPulse {
+      0%, 100% { opacity: 0.82; filter: blur(14px); }
+      50% { opacity: 0.95; filter: blur(8px); }
+    }
+    @keyframes titleGlitch {
+      0% { transform: translate(0, 0) skew(0deg); opacity: 1; }
+      20% { transform: translate(6px, -4px) skew(1deg); opacity: 0.75; }
+      40% { transform: translate(-6px, 3px) skew(-1.5deg); opacity: 0.9; }
+      60% { transform: translate(5px, 5px) skew(-2deg); opacity: 0.8; }
+      80% { transform: translate(-4px, -6px) skew(1.8deg); opacity: 1; }
+      100% { transform: translate(0, 0) skew(0deg); opacity: 0.9; }
+    }
+    @keyframes titlePulse {
+      0% { filter: drop-shadow(0 0 12px rgba(108, 225, 255, 0.4)) drop-shadow(0 0 30px rgba(161, 194, 255, 0.35)); }
+      50% { filter: drop-shadow(0 0 22px rgba(108, 225, 255, 0.85)) drop-shadow(0 0 38px rgba(107, 186, 255, 0.55)); }
+      100% { filter: drop-shadow(0 0 15px rgba(117, 209, 255, 0.6)) drop-shadow(0 0 40px rgba(180, 220, 255, 0.45)); }
+    }
+    p {
+      margin: 0 0 2rem;
+      font-size: 1rem;
+      color: rgba(224, 234, 255, 0.82);
+      letter-spacing: 0.08rem;
+      text-transform: uppercase;
+    }
+    nav {
+      display: grid;
+      gap: 0.9rem;
+      width: min(320px, 70vw);
+      margin: 0 auto;
+    }
+    a.menu-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1.2rem;
+      border-radius: 12px;
+      border: 1px solid rgba(168, 188, 255, 0.55);
+      background: linear-gradient(135deg, rgba(22, 30, 52, 0.92), rgba(30, 42, 68, 0.92));
+      color: rgba(240, 246, 255, 0.94);
+      text-decoration: none;
+      font-weight: 600;
+      letter-spacing: 0.18rem;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    a.menu-link:hover {
+      transform: translateY(-2px);
+      border-color: rgba(198, 214, 255, 0.85);
+      background: linear-gradient(135deg, rgba(40, 55, 92, 0.96), rgba(60, 82, 128, 0.96));
+      box-shadow: 0 18px 32px rgba(86, 110, 170, 0.55);
+    }
+    a.menu-link[disabled] {
+      opacity: 0.55;
+      filter: grayscale(25%);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    small {
+      display: block;
+      margin-top: 2rem;
+      color: rgba(176, 192, 238, 0.58);
+      font-size: 0.75rem;
+      letter-spacing: 0.14rem;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
-<body class="centerPage">
-  <div id="indexWrapper">
-    <!-- Globos decorativos -->
-    <div class="balloon"></div>
-    <div class="balloon"></div>
-    <div class="balloon"></div>
-    <div class="balloon"></div>
-    <div class="balloon"></div>
-    <div class="balloon"></div>
-    
-    <!-- Confeti -->
-    <div class="confetti" style="left: 10%; animation-delay: 0s;"></div>
-    <div class="confetti" style="left: 20%; animation-delay: 0.5s;"></div>
-    <div class="confetti" style="left: 30%; animation-delay: 1s;"></div>
-    <div class="confetti" style="left: 40%; animation-delay: 1.5s;"></div>
-    <div class="confetti" style="left: 50%; animation-delay: 2s;"></div>
-    <div class="confetti" style="left: 60%; animation-delay: 2.5s;"></div>
-    <div class="confetti" style="left: 70%; animation-delay: 3s;"></div>
-    <div class="confetti" style="left: 80%; animation-delay: 3.5s;"></div>
-    <div class="confetti" style="left: 90%; animation-delay: 4s;"></div>
-    
-    <div id="menuContent">
-      <h1 id="birthdayTitle">¡Feliz Cumpleaños Adrian!</h1>
-      
-      <div id="birthdayMessage">
-        ¡Felicidades Adrian! 🎂 Tu fiesta de cumpleaños está en PELIGRO! 
-        Hay invitados que tienen problemas para llegar y todavía no tenemos la comida. 
-        ¡Tienes que ayudar a los invitados que llegan tarde y recuperar la comida 
-        antes de que sea demasiado tarde! ¡La celebración más épica del año depende de ti! 🎊
-      </div>
-   
-      <div id="partyStatus">
-        🚨 Estado de la Fiesta: ¡EMERGENCIA! ¡Necesitamos un milagro en el 93! 🚨
-      </div>
-      
-      <div id="gameLinks">
-        <a href="juego1.html" class="gameLink">🎮 Alcántara en apuros</a>
-        <a href="juego2.html" class="gameLink">🎮 Shempions League</a>
-        <a href="juego3.html" class="gameLink">🎮 Pesadilla en la cocina</a>
-        <a href="fiesta.html" class="gameLink locked" id="fiestaLink">🎉 Fiesta - Celebración Final</a>
-      </div>
-    </div>
-  </div>  
-  
-  <script>
-    // Crear más confeti dinámicamente
-    function createConfetti() {
-      for (let i = 0; i < 20; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + '%';
-        confetti.style.animationDelay = Math.random() * 3 + 's';
-        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        document.getElementById('indexWrapper').appendChild(confetti);
-      }
-    }
-    
-    // Crear confeti cada 4 segundos
-    setInterval(createConfetti, 4000);
-    
-    // Funciones para el modal responsive
-    function openInfoModal() {
-      const modal = document.getElementById('infoModal');
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden'; // Prevenir scroll del body
-    }
-    
-    function closeInfoModal() {
-      const modal = document.getElementById('infoModal');
-      modal.classList.add('hidden');
-      document.body.style.overflow = 'auto'; // Restaurar scroll del body
-    }
-    
-    // Cerrar modal al hacer clic fuera del contenido
-    document.getElementById('infoModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeInfoModal();
-      }
-    });
-    
-    // Cerrar modal con tecla Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeInfoModal();
-      }
-    });
-  </script>
+<body>
+  <main>
+    <h1 class="glitch-title" data-text="Bienvenido">Bienvenido</h1>
+    <p>Toma asiento.</p>
+    <nav>
+      <a class="menu-link" href="adriansito/">Adriansito</a>
+      <a class="menu-link" href="bonguito/" disabled>Cuming soon...</a>
+      <a class="menu-link" href="colibrix/" disabled>Cuming soon...</a>
+    </nav>
+  </main>
 </body>
 </html>

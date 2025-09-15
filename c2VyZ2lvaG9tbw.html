@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>...</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Share Tech Mono', 'Segoe UI', Tahoma, sans-serif;
+      background: #000;
+      color: #f5f5f5;
+      overflow-x: hidden;
+    }
+
+    /* Header de la fecha: ancho completo, centrado */
+    header#topBar {
+      width: 100%;
+      padding: 1.2rem 1rem 0.4rem;
+      display: grid;
+      place-items: center;
+    }
+    #countdown {
+      position: relative;
+      display: inline-block;
+      font-size: clamp(2.8rem, 12vw, 6.5rem);
+      letter-spacing: clamp(0.25rem, 1.2vw, 0.6rem);
+      line-height: 1.1;
+      text-transform: uppercase;
+      color: #ffffff;
+      /* Fuente tipo �digit� */
+      font-family: 'Share Tech Mono', 'DS-Digital', 'digital-7', 'Orbitron', 'Seven Segment', 'Segment7Standard', monospace;
+      text-align: center;
+      user-select: none;
+      will-change: transform, filter;
+      text-shadow:
+        0 0 6px rgba(255,255,255,0.35),
+        0 0 10px rgba(255,255,255,0.22);
+    }
+    #countdown::before,
+    #countdown::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0; /* oculto por defecto, solo visible durante glitch */
+    }
+    /* Glitch constante en blanco */
+    #countdown.glitchLoop::before {
+      color: rgba(255,255,255,0.9);
+      clip-path: polygon(0 0,100% 0,100% 48%,0 58%);
+      animation: glitchA 1400ms steps(2, end) infinite;
+      transform: translate(-2px, -1px);
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
+      opacity: 1;
+    }
+    #countdown.glitchLoop::after {
+      color: rgba(255,255,255,0.85);
+      clip-path: polygon(0 40%,100% 36%,100% 100%,0 100%);
+      animation: glitchB 1200ms steps(2, end) infinite;
+      transform: translate(2px, 1px);
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+      opacity: 1;
+    }
+    /* Jitter global en blanco y negro (sin color) */
+    #countdown.glitchLoop { animation: jitterBW 260ms steps(2, end) infinite; }
+
+    @keyframes glitchA {
+      0%   { transform: translate(-2px, -1px) skewX(0.4deg); }
+      50%  { transform: translate(-6px, -3px) skewX(-0.8deg); }
+      100% { transform: translate(-2px, -1px) skewX(0.4deg); }
+    }
+    @keyframes glitchB {
+      0%   { transform: translate(2px, 1px) skewY(-0.3deg); }
+      50%  { transform: translate(6px, 3px) skewY(0.9deg); }
+      100% { transform: translate(2px, 1px) skewY(-0.3deg); }
+    }
+    @keyframes jitterBW {
+      0%   { filter: contrast(115%) brightness(1.0); }
+      50%  { filter: contrast(140%) brightness(1.06); }
+      100% { filter: contrast(125%) brightness(1.02); }
+    }
+
+    /* Formulario minimalista y sin adornos */
+    main#mainContent {
+      width: min(520px, 92vw);
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+      align-items: stretch;
+    }
+    form { display: grid; gap: 1.6rem; margin-top: 2rem; }
+    .field { display: flex; flex-direction: column; gap: 0.45rem; }
+    label {
+      font-size: 0.9rem;
+      letter-spacing: 0.16rem;
+      text-transform: uppercase;
+      color: rgba(222, 222, 222, 0.75);
+    }
+    input[type="text"] {
+      padding: 0.9rem 1rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: transparent;
+      color: #ffffff;
+      font-size: 1rem;
+      letter-spacing: 0.12rem;
+      text-transform: lowercase;
+      transition: border-color 0.2s ease;
+    }
+    input[type="text"]:focus { outline: none; border-color: rgba(255, 255, 255, 0.6); }
+    input[type="text"][disabled] { color: rgba(170, 170, 170, 0.4); }
+    button[type="submit"] {
+      justify-self: stretch; /* ocupar todo el ancho en grid */
+      width: 100%;
+      padding: 0.95rem 1.2rem;
+      border-radius: 6px;
+      border: none;
+      background: #f5f5f5;
+      color: #000;
+      font-weight: 600;
+      letter-spacing: 0.25rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    button[type="submit"]:hover { background: #bdbdbd; }
+    button[type="submit"]:disabled { opacity: 0.4; cursor: default; }
+
+    .feedback {
+      min-height: 1.2rem;
+      font-size: 2rem;
+      letter-spacing: 0.08rem;
+      color: rgba(255, 214, 64, 0.9);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .feedback.visible { opacity: 1; }
+
+    .hidden { display: none !important; }
+
+    /* Overlay de glitch para el final (paleta azul/morado/rojo/amarillo) */
+    #glitchOverlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.07) 0 2px, rgba(0,0,0,0.07) 2px 4px),
+        radial-gradient(circle at 25% 30%, rgba(60,162,255,0.25), transparent 50%),
+        radial-gradient(circle at 75% 25%, rgba(152,44,255,0.22), transparent 50%),
+        radial-gradient(circle at 30% 70%, rgba(255,72,108,0.22), transparent 55%),
+        radial-gradient(circle at 80% 65%, rgba(255,205,67,0.24), transparent 55%),
+        rgba(0,0,0,0.24);
+      opacity: 0; filter: contrast(140%) saturate(180%);
+    }
+    #glitchOverlay.active { animation: glitchStorm 110ms steps(2, end) infinite, noiseShift 90ms steps(3, end) infinite; opacity: 1; }
+    #glitchOverlay::before, #glitchOverlay::after {
+      content: ''; position: absolute; inset: -4px; mix-blend-mode: screen; pointer-events: none;
+    }
+    #glitchOverlay::before {
+      background: linear-gradient(90deg, rgba(66,135,245,0.35), transparent 35%, rgba(182,42,255,0.35));
+      animation: channelShiftA 120ms steps(4, end) infinite; filter: blur(0.7px);
+    }
+    #glitchOverlay::after {
+      background: linear-gradient(90deg, rgba(255,86,130,0.35), transparent 65%, rgba(255,214,64,0.3)),
+                  repeating-linear-gradient(0deg, transparent 0 5px, rgba(0,0,0,0.55) 5px 7px, transparent 7px 13px);
+      animation: channelShiftB 150ms steps(6, end) infinite, sliceShift 220ms steps(8, end) infinite; filter: blur(0.7px);
+    }
+    @keyframes glitchStorm { 0% {transform:translate(0,0);} 25% {transform:translate(22px,-15px) skewX(3deg);} 50% {transform:translate(-20px,12px) skewY(-2deg);} 75% {transform:translate(15px,-10px) scale(1.03);} 100% {transform:translate(0,0);} }
+    @keyframes noiseShift { 0% {filter:hue-rotate(0deg) contrast(170%);} 50% {filter:hue-rotate(36deg) contrast(220%);} 100% {filter:hue-rotate(-36deg) contrast(190%);} }
+    @keyframes channelShiftA { 0% {transform:translate(0,0);} 50% {transform:translate(12px,-8px);} 100% {transform:translate(0,0);} }
+    @keyframes channelShiftB { 0% {transform:translate(0,0);} 50% {transform:translate(-12px,8px);} 100% {transform:translate(0,0);} }
+    @keyframes sliceShift {
+      0% { clip-path: polygon(0% 5%,100% 3%,100% 18%,0% 20%); transform: translateX(0); }
+      20% { clip-path: polygon(0% 24%,100% 20%,100% 36%,0% 40%); transform: translateX(30px); }
+      40% { clip-path: polygon(0% 42%,100% 38%,100% 54%,0% 58%); transform: translateX(-26px); }
+      60% { clip-path: polygon(0% 60%,100% 56%,100% 72%,0% 76%); transform: translateX(34px); }
+      80% { clip-path: polygon(0% 78%,100% 74%,100% 90%,0% 94%); transform: translateX(-30px); }
+      100% { clip-path: polygon(0% 5%,100% 3%,100% 18%,0% 20%); transform: translateX(0); }
+    }
+
+    /* Pantalla final negra con fecha grande */
+    #finalScreen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 1400; opacity: 0; transition: opacity 2.2s ease; }
+    #finalScreen.visible { opacity: 1; }
+    .final-text { font-size: clamp(2.8rem, 8vw, 4.6rem); letter-spacing: 0.45rem; text-transform: uppercase; color: rgba(255, 255, 255, 0.9); opacity: 0; transform: scale(0.94); text-align: center; transition: opacity 3.4s ease 1s, transform 3.4s ease 1s; }
+    .final-text.visible { opacity: 1; transform: scale(1); }
+  </style>
+</head>
+<body>
+  <div id="glitchOverlay" class="hidden" aria-hidden="true"></div>
+  <header id="topBar">
+    <div id="countdown" class="glitchLoop" data-text="00d 00h 00m 00s" aria-live="polite">00d 00h 00m 00s</div>
+  </header>
+  <main id="mainContent">
+    <form id="codeForm" novalidate autocomplete="off">
+      <div class="field">
+        <label for="codeAdriansito">Código Adriansito:</label>
+        <input type="text" id="codeAdriansito" name="adriansito" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+      </div>
+      <div class="field">
+        <label for="codeBongo">Código Bongo:</label>
+        <input type="text" id="codeBongo" name="bongo" placeholder="Cuming soon..." autocomplete="off" autocapitalize="off" spellcheck="false" required disabled />
+      </div>
+      <div class="field">
+        <label for="codeColibro">Código Colibro:</label>
+        <input type="text" id="codeColibro" name="colibro" placeholder="Cuming soon..." autocomplete="off" autocapitalize="off" spellcheck="false" required disabled />
+      </div>
+      <button type="submit">Enviar</button>
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <div id="finalScreen" class="hidden" aria-hidden="true">
+    <div class="final-text" id="finalMessage">25 de Septiembre 2025, 21:00</div>
+  </div>
+  <script>
+    (() => {
+      const countdownEl = document.getElementById('countdown');
+      const overlay = document.getElementById('glitchOverlay');
+      const mainContent = document.getElementById('mainContent');
+      const form = document.getElementById('codeForm');
+      const feedback = document.getElementById('feedback');
+      const finalScreen = document.getElementById('finalScreen');
+      const finalMessage = document.getElementById('finalMessage');
+      const submitButton = form.querySelector('button[type="submit"]');
+      const inputs = {
+        adriansito: document.getElementById('codeAdriansito'),
+        bongo: document.getElementById('codeBongo'),
+        colibro: document.getElementById('codeColibro')
+      };
+
+      const targetDate = new Date(2025, 8, 20, 0, 0, 0); // 20/09/2025 00:00
+      const unlockBongo = new Date(2025, 8, 18, 0, 0, 0); // 18/09/2025 00:00
+      const unlockColibro = new Date(2025, 8, 19, 0, 0, 0); // 19/09/2025 00:00
+      const expected = { adriansito: 'hashbulla', bongo: 'cheetos-pandilla', colibro: 'daredevil' };
+      let finaleTriggered = false;
+
+      const pad = (v) => String(v).padStart(2, '0');
+
+      function updateCountdown() {
+        const now = new Date();
+        const diff = targetDate.getTime() - now.getTime();
+        if (diff <= 0) {
+          const z = '00d 00h 00m 00s';
+          countdownEl.textContent = z;
+          countdownEl.setAttribute('data-text', z);
+          return;
+        }
+        const total = Math.floor(diff / 1000);
+        const d = Math.floor(total / 86400);
+        const h = Math.floor((total % 86400) / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        const text = `${pad(d)}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+        countdownEl.textContent = text;
+        countdownEl.setAttribute('data-text', text);
+      }
+
+      function updateLocks() {
+        const now = new Date();
+        const LOCK_HINT = 'Cuming soon...';
+        if (now >= unlockBongo) {
+          if (inputs.bongo.disabled) inputs.bongo.disabled = false;
+          inputs.bongo.placeholder = '';
+        } else {
+          inputs.bongo.placeholder = LOCK_HINT;
+        }
+        if (now >= unlockColibro) {
+          if (inputs.colibro.disabled) inputs.colibro.disabled = false;
+          inputs.colibro.placeholder = '';
+        } else {
+          inputs.colibro.placeholder = LOCK_HINT;
+        }
+      }
+
+      function setFeedback(message) {
+        feedback.textContent = message;
+        if (message) feedback.classList.add('visible'); else feedback.classList.remove('visible');
+      }
+
+      function triggerGlitchFinale() {
+        if (finaleTriggered) return;
+        finaleTriggered = true;
+        setFeedback('');
+        submitButton.disabled = true;
+        form.querySelectorAll('input').forEach((input) => (input.disabled = true));
+
+        overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(() => overlay.classList.add('active'));
+        document.body.classList.add('glitch-burst');
+
+        const GLITCH_TOTAL_MS = 5600;
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          overlay.classList.add('hidden');
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('glitch-burst');
+          document.body.classList.add('blackout');
+          mainContent.classList.add('hidden');
+          finalScreen.classList.remove('hidden');
+          finalScreen.classList.add('visible');
+          finalScreen.setAttribute('aria-hidden', 'false');
+          requestAnimationFrame(() => finalMessage.classList.add('visible'));
+        }, GLITCH_TOTAL_MS);
+      }
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (finaleTriggered) return;
+
+        const values = {
+          adriansito: inputs.adriansito.value.trim(),
+          bongo: inputs.bongo.value.trim(),
+          colibro: inputs.colibro.value.trim(),
+        };
+        const matches = {
+          adriansito: values.adriansito === expected.adriansito,
+          bongo: values.bongo === expected.bongo,
+          colibro: values.colibro === expected.colibro,
+        };
+        const correctCount = Object.values(matches).filter(Boolean).length;
+
+        if (correctCount === 3) {
+          const now = new Date();
+          if (now >= targetDate) {
+            triggerGlitchFinale();
+          } else {
+            setFeedback('No te pases de listo, no mires donde no debas');
+          }
+          return;
+        }
+        if (correctCount > 0) setFeedback('Uno menos...'); else setFeedback('Vuelve a intentarlo.');
+      });
+
+      form.addEventListener('input', () => { if (!finaleTriggered) setFeedback(''); });
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+      updateLocks();
+      setInterval(updateLocks, 60000);
+
+      // Glitch intermitente: alterna entre efecto y texto limpio
+      const GLITCH_ON_MS = 2600;   // tiempo con efecto activo
+      const GLITCH_OFF_MS = 1400;  // tiempo sin efecto
+      (function intermittentGlitch(){
+        let on = true;
+        function next(delay){
+          setTimeout(() => {
+            on = !on;
+            countdownEl.classList.toggle('glitchLoop', on);
+            next(on ? GLITCH_ON_MS : GLITCH_OFF_MS);
+          }, delay);
+        }
+        // aseguramos empezar en estado 'on' según el marcado inicial
+        countdownEl.classList.add('glitchLoop');
+        next(GLITCH_ON_MS);
+      })();
+    })();
+  </script>
+</body>
+</html>

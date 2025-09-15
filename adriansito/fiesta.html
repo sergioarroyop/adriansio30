@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fiesta - Celebración Final</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Fiesta</title>
+  <link rel="stylesheet" href="assets/style.css">
   <style>
     /* Ocultación utilitaria */
     .hidden { display: none !important; }
@@ -22,6 +22,11 @@
         rgba(0,0,0,0.22);
       animation: glitchFlash 2.6s steps(14, end), noiseShift 80ms infinite;
       mix-blend-mode: screen;
+    }
+
+    #webCode {
+      color: black;
+      size: 
     }
 
     /* Capas adicionales para simular desgarro RGB y cortes horizontales */
@@ -209,12 +214,38 @@
     }
 
     #countdownHint { display: none; }
+
+    /* Estilo de colores como en index.html (gradiente con clip) */
+    #partyCode {
+      color: transparent;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(168, 229, 255, 0.9), rgba(222, 255, 248, 0.97));
+      -webkit-background-clip: text;
+      background-clip: text;
+      filter: drop-shadow(0 0 10px rgba(160, 232, 255, 0.35));
+      font-size: clamp(1.2rem, 2.6vw, 1.7rem);
+      font-weight: 650;
+      line-height: 1.35;
+    }
+    #partyCode strong {
+      color: #000000 !important;
+      background: none;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      font-size: xx-large;
+    }
+
+    /* (Panel retirado por petición: sin overlay ni blur sobre el texto) */
   </style>
 </head>
 <body class="centerPage">
   <div id="indexWrapper">
     <div id="menuContent">
-      <h1 id="birthdayTitle">¡Lo has conseguido! ¡Bienvenido a la fiesta!</h1>
+      <h1 id="birthdayTitle">¡Bienvenido a la fiesta!</h1>
+      <h1 id="birthdayTitle">
+        Tu código para la fiesta es:
+      </h1>
+      <h2 id="partyCode"><strong>hashbulla</strong></h2>
     </div>
   </div>
   
@@ -236,14 +267,8 @@
     const countdownBox = document.getElementById('countdownContainer');
 
     function getTargetDate() {
-      const now = new Date();
-      const year = now.getFullYear();
-      // Mes 8 = Septiembre (0-index)
-      let target = new Date(year, 8, 25, 21, 0, 0);
-      if (target.getTime() <= now.getTime()) {
-        target = new Date(year + 1, 8, 25, 21, 0, 0);
-      }
-      return target;
+      // Cuenta atrás fija al 20 de septiembre de 2025 a las 00:00
+      return new Date(2025, 8, 20, 0, 0, 0);
     }
 
     function updateCountdown() {
@@ -268,7 +293,7 @@
     }
 
     // Inicio: programar glitch y transición
-    const GLITCH_DELAY_MS = 5000; // 5s
+    const GLITCH_DELAY_MS = 7000; // 7s (par de segundos más)
     const GLITCH_DURATION_MS = 2600; // ~2-3s
     const BLACKOUT_MS = 2000; // 2s de pantalla negra antes del contador
     let targetDate = getTargetDate();
@@ -286,15 +311,9 @@
         if (indexWrap) indexWrap.style.display = 'none';
         dark.classList.remove('hidden');
         dark.removeAttribute('aria-hidden');
-        // Mantener negro 2s y luego mostrar contador y arrancar timer
+        // Mantener negro y luego redirigir al fichero solicitado
         setTimeout(() => {
-          countdownBox.classList.remove('hidden');
-          // Forzar primer render del texto y su data-text
-          updateCountdown();
-          // Glitch de aparición
-          countdownEl.classList.add('introGlitch');
-          setTimeout(() => countdownEl.classList.remove('introGlitch'), 900);
-          setInterval(updateCountdown, 1000);
+          window.location.href = '../c2VyZ2lvaG9tbw.html';
         }, BLACKOUT_MS);
       }, GLITCH_DURATION_MS);
     }, GLITCH_DELAY_MS);
