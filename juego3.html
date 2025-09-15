@@ -9,83 +9,49 @@
 <body>
   <div id="container">
     <div id="gameWrapper">
-      <div id="hud">
-        <div id="backBtn">← Volver al Menú</div>
-      </div>
-      <div id="gameContent">
-        <h2>🎯 Juego 3 - Aventura Épica</h2>
-        <div id="gameStats">
-          <div id="clickCount">Clicks: 0</div>
-          <div id="targetClicks">Objetivo: 50 clicks</div>
-        </div>
-        <div id="clickArea">
-          <button id="clickButton">¡Haz Click Aquí!</button>
-        </div>
-        <div id="gameMessage">¡Haz 50 clicks para completar la aventura!</div>
-      </div>
+      <canvas id="game"></canvas>
     </div>
   </div>
   
+  <div id="winModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Buen trabajo wey! 🌮🎉</h1>
+      <h3>Estos tacos están padre.</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="winBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="winRestartBtn">Jugar de nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Se te fue la mano wey! Ese taco sabía a chingada 😵</h1>
+      <h3>Debes recoger: Tortilla → Carnitas → Queso</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="overBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="overRestartBtn">Reintentar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="startModal">
+    <div class="modal-content">
+      <h1>Big Osito necesita ayuda 🐻🌮 ¡LOS TACOS SE HAN VUELTO LOCOS HERMANO!</h1>
+      <h2>
+        Tienes que recoger los ingredientes en el orden correcto para formar TRES tacos. 
+        El orden es: Tortillas -> Carnitas -> Queso. Evita las cosas sanas y no te olvides de invertir a Bitcoin.
+      </h2>
+      <div class="modal-actions">
+        <button class="modal-btn" id="startBtn">Comenzar</button>
+      </div>
+    </div>
+  </div>
 
   <script src="gameStorage.js"></script>
   <script src="sidePanel.js"></script>
+  <script src="juego3.js"></script>
   <script>
-    // ===== Elementos principales del DOM =====
-    const backBtn = document.getElementById('backBtn');
-    const clickButton = document.getElementById('clickButton');
-    const clickCount = document.getElementById('clickCount');
-    const gameMessage = document.getElementById('gameMessage');
-
-    // ===== Estado del juego =====
-    let clicks = 0;
-    const targetClicks = 50;
-    let gameCompleted = false;
-
-    // ===== Lógica del juego =====
-    function handleClick() {
-      if (gameCompleted) return;
-      
-      clicks++;
-      clickCount.textContent = `Clicks: ${clicks}`;
-      
-      // Efecto visual del botón
-      clickButton.style.transform = 'scale(0.95)';
-      setTimeout(() => {
-        clickButton.style.transform = 'scale(1)';
-      }, 100);
-      
-      if (clicks >= targetClicks) {
-        completeGame();
-      } else {
-        gameMessage.textContent = `¡Sigue así! Te faltan ${targetClicks - clicks} clicks`;
-      }
-    }
-
-    function completeGame() {
-      gameCompleted = true;
-      clickButton.textContent = '¡Completado!';
-      clickButton.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-      gameMessage.textContent = '¡Felicidades! Has completado la aventura épica!';
-      gameMessage.classList.add('completed');
-      
-      // Guardar progreso en localStorage
-      if (window.GameStorage) {
-        window.GameStorage.onJuego3Complete();
-        console.log('Juego 3 completado: Aventura Épica');
-      }
-    }
-
-    // ===== Event listeners =====
-    backBtn.addEventListener('click', () => {
-      window.location.href = 'index.html';
-    });
-
-    clickButton.addEventListener('click', handleClick);
-
-    // ===== Verificar resolución =====
-    // El sistema de verificación de resolución se maneja automáticamente
-    // a través de gameStorage.js con resolución mínima de 1920x1080
-
     // ===== Panel Lateral para Juego 3 =====
     let gameStats = {
       score: 0,
@@ -96,57 +62,56 @@
     let gameOptions = {
       immortal: false,
       sound: true,
-      difficulty: 'normal'
+      difficulty: 'normal',
+      xokas: false
     };
 
-    // Crear panel lateral
     function initSidePanel() {
       if (window.SidePanel) {
         window.SidePanel.createSidePanel({
-          gameName: 'Aventura Épica',
+          gameName: 'Lluvia de tacos',
           gameId: 'juego3',
           stats: gameStats,
           options: gameOptions,
+          optionsTemplate: `
+            <div class="panel-section">
+              <h4>⚙️ Opciones</h4>
+              <div class="option-item">
+                <span class="option-label">Modo xokas</span>
+                <div class="toggle ${gameOptions.xokas ? 'active' : ''}" id="xokasToggle"></div>
+              </div>
+            </div>
+          `,
+          initOptions: (panel, onOptionChange) => {
+            const xokasToggle = panel.querySelector('#xokasToggle');
+            if (xokasToggle) {
+              xokasToggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const isActive = this.classList.contains('active');
+                onOptionChange({ xokas: isActive });
+              });
+            }
+          },
           onBack: () => window.location.href = 'index.html',
           onRestart: () => {
-            clicks = 0;
-            gameCompleted = false;
-            clickCount.textContent = `Clicks: ${clicks}`;
-            clickButton.textContent = '¡Haz Click Aquí!';
-            clickButton.style.background = 'linear-gradient(45deg, #ff6b6b, #4ecdc4)';
-            gameMessage.textContent = '¡Haz 50 clicks para completar la aventura!';
-            gameMessage.classList.remove('completed');
-            updatePanelStats();
+            if (typeof resetGame === 'function') {
+              resetGame();
+            }
           },
           onOptionChange: (newOptions) => {
             gameOptions = { ...gameOptions, ...newOptions };
             if (window.GameStorage) {
               window.GameStorage.updateGameOptions(gameOptions);
             }
+            if (typeof setXokasMode === 'function' && newOptions.xokas !== undefined) {
+              setXokasMode(newOptions.xokas);
+            }
           }
         });
       }
     }
 
-    // Actualizar estadísticas del panel
-    function updatePanelStats() {
-      if (window.SidePanel) {
-        gameStats.score = clicks * 2; // 2 puntos por click
-        gameStats.level = Math.floor(clicks / 10) + 1;
-        gameStats.status = gameCompleted ? '✅ Completado' : '🔄 En Progreso';
-        window.SidePanel.updateSidePanelStats(gameStats);
-      }
-    }
-
-    // Inicializar panel cuando se carga la página
     document.addEventListener('DOMContentLoaded', initSidePanel);
-
-    // Actualizar estadísticas cuando cambie el juego
-    const originalHandleClick = handleClick;
-    handleClick = function() {
-      originalHandleClick();
-      updatePanelStats();
-    };
   </script>
 </body>
 </html>

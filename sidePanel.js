@@ -19,7 +19,9 @@ function createSidePanel(config) {
     options = {},
     onBack = () => window.location.href = 'index.html',
     onRestart = () => {},
-    onOptionChange = () => {}
+    onOptionChange = () => {},
+    optionsTemplate = null,
+    initOptions = null
   } = config;
 
   // Crear panel si no existe
@@ -40,6 +42,31 @@ function createSidePanel(config) {
     gameStats = window.GameStorage.getGameStats(gameId);
     progress = window.GameStorage.getGameProgress();
   }
+
+  // Preparar HTML de opciones (personalizable)
+  const defaultOptionsHTML = `
+    <div class="panel-section">
+      <h4>⚙️ Opciones</h4>
+      <div class="option-item">
+        <span class="option-label">Modo Inmortal</span>
+        <div class="toggle ${options.immortal ? 'active' : ''}" id="immortalToggle"></div>
+      </div>
+      <div class="option-item">
+        <span class="option-label">Sonido</span>
+        <div class="toggle ${options.sound ? 'active' : ''}" id="soundToggle"></div>
+      </div>
+      <div class="option-item">
+        <span class="option-label">Dificultad</span>
+        <select id="difficultySelect" style="background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 8px;">
+          <option value="easy" ${options.difficulty === 'easy' ? 'selected' : ''}>Fácil</option>
+          <option value="normal" ${!options.difficulty || options.difficulty === 'normal' ? 'selected' : ''}>Normal</option>
+          <option value="hard" ${options.difficulty === 'hard' ? 'selected' : ''}>Difícil</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+  const optionsHTML = optionsTemplate || defaultOptionsHTML;
 
   // Generar HTML del panel
   panel.innerHTML = `
@@ -66,17 +93,7 @@ function createSidePanel(config) {
     </div>
 
 
-    <div class="panel-section">
-      <h4>⚙️ Opciones</h4>
-      <div class="option-item">
-        <span class="option-label">Modo Inmortal</span>
-        <div class="toggle ${options.immortal ? 'active' : ''}" id="immortalToggle"></div>
-      </div>
-      <div class="option-item">
-        <span class="option-label">Sonido</span>
-        <div class="toggle ${options.sound ? 'active' : ''}" id="soundToggle"></div>
-      </div>
-    </div>
+    ${optionsHTML}
 
     <div class="panel-section">
       <h4>🎮 Controles</h4>
@@ -92,39 +109,57 @@ function createSidePanel(config) {
 
     <button class="btn" id="backBtn">🏠 Volver al Inicio</button>
     <button class="btn secondary" id="restartBtn">🔄 Reiniciar Juego</button>
+    <button class="btn secondary" id="fullscreenBtn">⛶ Pantalla completa</button>
   `;
 
   // Event listeners
   document.getElementById('backBtn').addEventListener('click', onBack);
   document.getElementById('restartBtn').addEventListener('click', onRestart);
   
-  // Toggle inmortal
-  document.getElementById('immortalToggle').addEventListener('click', function() {
-    this.classList.toggle('active');
-    const isActive = this.classList.contains('active');
-    onOptionChange({ immortal: isActive });
-  });
+  // Toggle inmortal (si existe)
+  const immortalToggle = document.getElementById('immortalToggle');
+  if (immortalToggle) {
+    immortalToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      const isActive = this.classList.contains('active');
+      onOptionChange({ immortal: isActive });
+    });
+  }
 
-  // Toggle sonido
-  document.getElementById('soundToggle').addEventListener('click', function() {
-    this.classList.toggle('active');
-    const isActive = this.classList.contains('active');
-    onOptionChange({ sound: isActive });
-  });
+  // Toggle sonido (si existe)
+  const soundToggle = document.getElementById('soundToggle');
+  if (soundToggle) {
+    soundToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      const isActive = this.classList.contains('active');
+      onOptionChange({ sound: isActive });
+    });
+  }
 
-  // Selector de dificultad
-  document.getElementById('difficultySelect').addEventListener('change', function() {
-    onOptionChange({ difficulty: this.value });
-  });
+  // Selector de dificultad (si existe)
+  const diffSelect = document.getElementById('difficultySelect');
+  if (diffSelect) {
+    diffSelect.addEventListener('change', function() {
+      onOptionChange({ difficulty: this.value });
+    });
+  }
 
-  // Pantalla completa
-  document.getElementById('fullscreenBtn').addEventListener('click', function() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  });
+  // Pantalla completa (si existe)
+  const fsButton = document.getElementById('fullscreenBtn');
+  if (fsButton) {
+    fsButton.addEventListener('click', function() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  }
+
+  // Inicializar opciones personalizadas si se proporciona
+  if (typeof initOptions === 'function') {
+    try { initOptions(panel, onOptionChange); } catch (err) { console.error('initOptions error:', err); }
+  }
 
   return panel;
 }

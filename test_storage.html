@@ -61,8 +61,51 @@
     <button onclick="testUpdateScore()">Actualizar Puntuación Juego 2</button>
     <button onclick="testCheckCompletion()">Verificar Completado</button>
     <button onclick="testProgress()">Ver Progreso</button>
-    <button onclick="testSidePanel()">Probar Panel Lateral</button>
-    <button onclick="testResolution()">Probar Resolución</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Opciones del Juego</h2>
+    <div>
+      <label>
+        <input type="checkbox" id="optImmortal"> Modo Inmortal
+      </label>
+    </div>
+    <div>
+      <label>
+        <input type="checkbox" id="optSound" checked> Sonido Activado
+      </label>
+    </div>
+    <div>
+      <label>
+        Dificultad:
+        <select id="optDifficulty">
+          <option value="easy">fácil</option>
+          <option value="normal" selected>normal</option>
+          <option value="hard">difícil</option>
+        </select>
+      </label>
+    </div>
+    <button onclick="applyOptions()">Aplicar Opciones</button>
+    <button onclick="loadCurrentState()">Refrescar Estado</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Stats por Juego</h2>
+    <button onclick="testStats('juego1')">Ver Stats Juego 1</button>
+    <button onclick="testStats('juego2')">Ver Stats Juego 2</button>
+    <button onclick="testStats('juego3')">Ver Stats Juego 3</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Integración UI (Progreso)</h2>
+    <div id="partyStatus">Estado de la Fiesta pendiente…</div>
+    <div style="margin-top:10px" id="linksDemo">
+      <a href="juego1.html" class="gameLink">🎮 Juego 1</a>
+      <a href="juego2.html" class="gameLink">🎮 Juego 2</a>
+      <a href="juego3.html" class="gameLink">🎮 Juego 3</a>
+      <a href="fiesta.html" class="gameLink locked">🎉 Fiesta</a>
+    </div>
+    <button onclick="refreshUiIntegration()">Actualizar enlaces y estado</button>
   </div>
 
   <div class="test-section">
@@ -71,8 +114,6 @@
   </div>
 
   <script src="gameStorage.js"></script>
-  <script src="resolution.js"></script>
-  <script src="sidePanel.js"></script>
   <script>
     function log(message, type = 'info') {
       const logDiv = document.getElementById('log');
@@ -86,7 +127,6 @@
       try {
         const data = window.GameStorage.getGameData();
         const progress = window.GameStorage.getGameProgress();
-        const resolution = window.Resolution ? window.Resolution.checkResolution() : 'N/A';
         
         document.getElementById('currentState').innerHTML = `
           <h3>Datos Guardados:</h3>
@@ -94,10 +134,7 @@
           <h3>Progreso:</h3>
           <pre>${JSON.stringify(progress, null, 2)}</pre>
           <h3>Sistemas Cargados:</h3>
-          <pre>GameStorage: ${window.GameStorage ? '✅' : '❌'}
-Resolution: ${window.Resolution ? '✅' : '❌'}
-SidePanel: ${window.SidePanel ? '✅' : '❌'}
-Resolución OK: ${resolution ? '✅' : '❌'}</pre>
+          <pre>GameStorage: ${window.GameStorage ? '✅' : '❌'}</pre>
         `;
         
         log('Estado cargado correctamente', 'success');
@@ -178,46 +215,35 @@ Resolución OK: ${resolution ? '✅' : '❌'}</pre>
       }
     }
 
-    function testSidePanel() {
+    function testStats(gameId) {
       try {
-        if (window.SidePanel) {
-          window.SidePanel.createSidePanel({
-            gameName: 'Test Game',
-            gameId: 'test',
-            stats: { score: 1000, level: 5, status: '🔄 En Progreso' },
-            options: { immortal: false, sound: true, difficulty: 'normal' },
-            onBack: () => log('Botón Volver presionado', 'info'),
-            onRestart: () => log('Botón Reiniciar presionado', 'info'),
-            onOptionChange: (options) => log(`Opciones cambiadas: ${JSON.stringify(options)}`, 'info')
-          });
-          log('Panel lateral creado correctamente', 'success');
-        } else {
-          log('SidePanel no está disponible', 'error');
-        }
+        const stats = window.GameStorage.getGameStats(gameId);
+        log(`Stats ${gameId}: ${JSON.stringify(stats)}`, 'info');
       } catch (error) {
-        log(`Error al probar panel lateral: ${error.message}`, 'error');
+        log(`Error al obtener stats: ${error.message}`, 'error');
       }
     }
 
-    function testResolution() {
+    function applyOptions() {
       try {
-        if (window.Resolution) {
-          const isOk = window.Resolution.checkResolution();
-          log(`Resolución actual: ${window.innerWidth}x${window.innerHeight} - OK: ${isOk ? 'Sí' : 'No'}`, 'info');
-          
-          // Probar actualización de overlay
-          const overlay = document.getElementById('overlay');
-          if (overlay) {
-            window.Resolution.updateResolutionOverlay(overlay);
-            log('Overlay de resolución actualizado', 'success');
-          } else {
-            log('No se encontró overlay para probar', 'info');
-          }
-        } else {
-          log('Resolution no está disponible', 'error');
-        }
+        const immortalMode = document.getElementById('optImmortal').checked;
+        const soundEnabled = document.getElementById('optSound').checked;
+        const difficulty = document.getElementById('optDifficulty').value;
+        const updated = window.GameStorage.updateGameOptions({ immortalMode, soundEnabled, difficulty });
+        log(`Opciones aplicadas: ${JSON.stringify(updated.options)}`, 'success');
+        refreshUiIntegration();
       } catch (error) {
-        log(`Error al probar resolución: ${error.message}`, 'error');
+        log(`Error al aplicar opciones: ${error.message}`, 'error');
+      }
+    }
+
+    function refreshUiIntegration() {
+      try {
+        window.GameStorage.updateGameLinks();
+        window.GameStorage.showProgressMessage();
+        log('UI de progreso actualizada', 'success');
+      } catch (error) {
+        log(`Error al actualizar UI: ${error.message}`, 'error');
       }
     }
 
@@ -225,6 +251,7 @@ Resolución OK: ${resolution ? '✅' : '❌'}</pre>
     window.addEventListener('load', () => {
       log('Sistema de guardado inicializado', 'success');
       loadCurrentState();
+      refreshUiIntegration();
     });
   </script>
 </body>

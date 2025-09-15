@@ -624,7 +624,7 @@ canvas {
 
 
 /* Modales de juego */
-#winModal, #gameOverModal {
+#winModal, #gameOverModal, #startModal {
   position: absolute;
   top: 0;
   left: 0;
@@ -644,7 +644,7 @@ canvas {
   backdrop-filter: blur(5px);
 }
 
-#winModal.hidden, #gameOverModal.hidden {
+#winModal.hidden, #gameOverModal.hidden, #startModal.hidden {
   display: none;
 }
 
@@ -886,20 +886,31 @@ canvas {
   text-align: center;
 }
 
+.modal-actions {
+  display: flex;
+  gap: clamp(10px, 2vw, 20px);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: clamp(10px, 2vh, 20px);
+}
+
 .modal-btn {
   background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
   border: none;
   color: white;
-  padding: 15px 40px;
-  font-size: 18px;
+  padding: clamp(12px, 2.5vh, 18px) clamp(16px, 4vw, 32px);
+  font-size: clamp(14px, 2.2vw, 18px);
   font-weight: bold;
-  border-radius: 25px;
+  border-radius: clamp(16px, 3vw, 25px);
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
   transition: all 0.3s ease;
   font-family: 'Comic Sans MS', cursive;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  flex: 1 1 220px;
+  max-width: 320px;
+  margin-bottom: 15px;
 }
 
 .modal-btn:hover {
@@ -910,6 +921,13 @@ canvas {
 
 .modal-btn:active {
   transform: translateY(-1px) scale(1.02);
+}
+
+@media (max-width: 600px) {
+  .modal-btn {
+    max-width: none;
+    width: 100%;
+  }
 }
 
 /* Animaciones del modal */
