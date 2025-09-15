@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Shempions League</title>
-  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="../../assets/style.css">
   <style>
     /* Ajustes mínimos específicos del runner */
     #distanceLabel { position:absolute; top:12px; right:20px; color:#333; font-weight:bold; }
   </style>
-  <script src="../assets/gameStorage.js"></script>
-  <script src="../assets/sidePanel.js"></script>
+  <script src="../../assets/gameStorage.js"></script>
+  <script src="../../assets/sidePanel.js"></script>
 </head>
 <body>
   <div id="container">
@@ -74,7 +74,6 @@
               <div class=\"toggle ${gameOptions.cr7 ? 'active' : ''}\" id=\"cr7Toggle\"></div>
             </div>
           </div>
-          <button class=\"btn secondary\" id=\"fullscreenBtn\">⛶ Pantalla completa</button>
         `,
         initOptions: (panel, onOptionChange) => {
           const cr7 = panel.querySelector('#cr7Toggle');

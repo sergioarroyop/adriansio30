@@ -1,7 +1,21 @@
 // gameStorage.js - Sistema de guardado de puntuaciones y progreso de juegos
 
 // ===== Configuración del localStorage =====
-const STORAGE_KEY = 'adrianBirthdayGameData';
+// Clave de almacenamiento diferenciada por carpeta principal (adriansito, bongo, colibrix)
+const STORAGE_NS = (() => {
+  try {
+    const p = (window.location && window.location.pathname ? window.location.pathname : '').toLowerCase();
+    if (p.includes('/bongo/')) return 'bongo';
+    if (p.includes('/colibrix/')) return 'colibrix';
+    if (p.includes('/adriansito/')) return 'adriansito';
+  } catch {}
+  // Por defecto, agrupar como 'adriansito' si no se detecta ruta
+  return 'adriansito';
+})();
+// Nuevo prefijo de clave unificado
+const STORAGE_KEY = `birthdayGameData:${STORAGE_NS}`;
+// Clave legacy para migración transparente
+const LEGACY_KEY = `adrianBirthdayGameData:${STORAGE_NS}`;
 
 // ===== Estructura de datos por defecto =====
 const defaultGameData = {
@@ -248,10 +262,25 @@ function onJuego3Complete() {
 
 // Ejecutar cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-  // Solo ejecutar en index.html
-  if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-    updateGameLinks();
-    showProgressMessage();
+  // Inicializar storage si no existe al entrar en los index principales
+  try {
+    const path = (window.location && window.location.pathname ? window.location.pathname : '').toLowerCase();
+    const isIndex = path.endsWith('/index.html') || path === '/' || path.endsWith('/');
+    if (isIndex && (path.includes('/adriansito/') || path.includes('/bongo/') || path.includes('/colibrix/') || path === '/')) {
+      // Migración desde la clave antigua si existe
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        const legacy = localStorage.getItem(LEGACY_KEY);
+        if (legacy) {
+          try { localStorage.setItem(STORAGE_KEY, legacy); } catch (e) {}
+        } else {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultGameData));
+        }
+      }
+      updateGameLinks();
+      showProgressMessage();
+    }
+  } catch (e) {
+    console.error('Init storage error:', e);
   }
 });
 

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheetos Pandilla — Huesitos</title>
+  <link rel="stylesheet" href="../../assets/style.css" />
+  <!-- Librería necesaria para el juego Huesitos -->
+  <script src="https://cdn.jsdelivr.net/mojs/latest/mo.min.js"></script>
+  <style>
+    /* Estilos mínimos del juego Huesitos integrados en el wrapper */
+    #gameWrapper { position: relative; }
+    .init, .won {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 720px;
+      text-align: center;
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 10;
+    }
+    .init { top: 10%; }
+    .won { top: 100%; }
+    .hidden { display: none; }
+    .center, .center1 { display: flex; flex-direction: column; gap: .8rem; align-items: center; }
+    .bold { font-weight: 700; }
+    .floating { cursor: pointer; user-select: none; padding: .4rem .9rem; border-radius: 999px; background: #ffdf7e; }
+    .container { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .game { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(5, 1fr); gap: 8px; width: min(86%, 640px); height: min(70%, 520px); }
+    .box { background: #f6f6f6; border: 2px solid #6ab04c; border-radius: 8px; box-shadow: inset 0 0 6px rgba(0,0,0,0.1); transition: background .15s ease, transform .05s ease; }
+    .box:active { transform: scale(0.98); }
+    /* Huesitos (árbol) */
+    .box.tree {
+      background-color: #ffffff;
+      background-image: url('https://i.postimg.cc/26XrS9bj/cheetos.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 80% 80%;
+      border-color: #2ed573;
+    }
+    /* Centroide/fábrica */
+    .box.factory {
+      background-color: #ffffff;
+      background-image: url('https://i.postimg.cc/d1JjV4Mf/sin-fondo.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 90% 90%;
+      border-color: #ff6b6b;
+    }
+    @keyframes start { from { top: 10%; opacity: 1; } to { top: 100%; opacity: 0; } }
+    @keyframes won { from { top: 100%; opacity: 0; } to { top: 30%; opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="gameWrapper">
+      <!-- Juego Huesitos integrado en el cuadrado -->
+      <div class="init hidden"></div>
+      <div class="container">
+        <div class="game"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales estilo común -->
+  <div id="winModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Cheetos salvados! 🧀🎉</h1>
+      <h3>Has recogido todos los Cheetos ¡PERO NO TE LOS COMAS ANTES DE LA FIESTA!</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="winBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="winRestartBtn">Jugar de nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Se han zampado todos los Cheetos! 😵</h1>
+      <h3>El Malvado Calvo Gafotas se ha comido todo. Inténtalo otra vez.</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="overBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="overRestartBtn">Reintentar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="startModal">
+    <div class="modal-content">
+      <h1>!Oh no! Se han desperdigado los Cheetos pandilla</h1>
+      <h2>El Malvado Calvo Gafotas quiere comérselos todos. ¡Tienes que impedirlo!</h2>
+      <div class="modal-actions">
+        <button class="modal-btn" id="startBtn">Comenzar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts comunes y del juego -->
+  <script src="../../assets/gameStorage.js"></script>
+  <script src="../../assets/sidePanel.js"></script>
+  <script src="../../assets/huesitos.js"></script>
+  <script>
+    // Panel lateral para Huesitos
+    let gameStats = { trees: 0, factories: 0, status: '🔄 En Progreso' };
+    let gameOptions = { difficulty: 'normal' };
+
+    function initSidePanel() {
+      if (!window.SidePanel) return;
+      window.SidePanel.createSidePanel({
+        gameName: 'Cheetos Pandilla — Huesitos',
+        gameId: 'cheetos',
+        stats: gameStats,
+        options: gameOptions,
+        optionsTemplate: `
+          <div class=\"panel-section\">
+            <h4>⚙️ Dificultad</h4>
+            <div class=\"option-item\">
+              <span class=\"option-label\">Nivel</span>
+              <select id=\"diffSelect\" style=\"background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:6px 8px;\">
+                <option value=\"easy\">Fácil</option>
+                <option value=\"normal\">Normal</option>
+                <option value=\"hard\">Difícil</option>
+              </select>
+            </div>
+          </div>
+        `,
+        initOptions: (panel, onOptionChange) => {
+          const select = panel.querySelector('#diffSelect');
+          if (!select) return;
+          select.value = gameOptions.difficulty || 'normal';
+          select.addEventListener('change', () => {
+            const level = select.value || 'normal';
+            onOptionChange({ difficulty: level });
+          });
+        },
+        onBack: () => window.location.href = '../index.html',
+        onRestart: () => { if (typeof window.resetHuesitos === 'function') window.resetHuesitos(); },
+        onOptionChange: (opts) => {
+          gameOptions = { ...gameOptions, ...opts };
+          if (opts.difficulty && typeof window.setHuesitosDifficulty === 'function') {
+            window.setHuesitosDifficulty(opts.difficulty);
+          }
+        }
+      });
+    }
+    document.addEventListener('DOMContentLoaded', initSidePanel);
+
+    // Actualización periódica desde estado expuesto por el juego
+    setInterval(() => {
+      if (!window.SidePanel || !window.HUESITOS_STATE) return;
+      gameStats.trees = window.HUESITOS_STATE.trees || 0;
+      gameStats.factories = window.HUESITOS_STATE.factories || 0;
+      gameStats.status = window.HUESITOS_STATE.running ? '🔄 En Progreso' : '⏸️ Pausado';
+      window.SidePanel.updateSidePanelStats(gameStats);
+    }, 500);
+
+    // Modales helpers
+    window.showWinModal = function() {
+      const m = document.getElementById('winModal');
+      if (m) m.classList.remove('hidden');
+      if (window.GameStorage && window.GameStorage.onJuego3Complete) {
+        try { window.GameStorage.onJuego3Complete(); } catch(e){}
+      }
+    }
+    window.showGameOverModal = function() {
+      const m = document.getElementById('gameOverModal');
+      if (m) m.classList.remove('hidden');
+    }
+    // Botones modales
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'startBtn') {
+        if (window.startHuesitos) window.startHuesitos();
+        document.getElementById('startModal')?.classList.add('hidden');
+      }
+      if (e.target.id === 'winBackBtn' || e.target.id === 'overBackBtn') {
+        window.location.href = '../index.html';
+      }
+      if (e.target.id === 'winRestartBtn' || e.target.id === 'overRestartBtn') {
+        document.getElementById('winModal')?.classList.add('hidden');
+        document.getElementById('gameOverModal')?.classList.add('hidden');
+        if (window.resetHuesitos) window.resetHuesitos();
+      }
+    });
+
+    // Enlace pista protegido
+    (function(){
+      const enlace = document.getElementById('desbloquea-chess');
+      if (!enlace) return;
+      enlace.addEventListener('click', function(){
+        if (typeof window.unlockGame === 'function') {
+          try { window.unlockGame('chess'); } catch(e){}
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

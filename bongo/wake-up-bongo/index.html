@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wake Up, Bongo</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <div id="container">
+    <div id="gameWrapper">
+      <div id="retryInfo" style="position:absolute; top:12px; left:14px; color:#333; font-weight:700; background: rgba(255,255,255,0.65); padding: 6px 10px; border-radius: 8px;">
+        Intentos restantes: 3 | Último: --
+      </div>
+      <div id="timerBox" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+        <div id="timerDisplay" style="
+          font-family: 'DS-Digital','Digital-7','Seven Segment','Orbitron','Share Tech Mono','Courier New', monospace;
+          font-weight: 700;
+          font-size: clamp(2.6rem, 12vw, 7.2rem);
+          color: #222;
+          letter-spacing: 0.12rem;
+          user-select: none;
+          cursor: pointer;
+          background: rgba(255,255,255,0.7);
+          padding: .6rem 1rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        ">16,00,00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales comunes -->
+  <div id="winModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Por los pelos! ⏱️</h1>
+      <h3>Te has levantado y has llegado a tiempo</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="winBackBtn">Volver</button>
+        <button class="modal-btn" id="winRestartBtn">Reintentar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Te has sobado como un cabrón! 😵</h1>
+      <h3>Has llegado tarde, te has sobado como un cabrón</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="overBackBtn">Volver</button>
+        <button class="modal-btn" id="overRestartBtn">Reintentar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="startModal">
+    <div class="modal-content">
+      <h1>¡Wake up! Bongo</h1>
+      <h2>Nooooo, te has echado una siesta en el día de tu cumpleaños, vas a llegar tarde a la fiesta. Acabas de dormirte a las 16,00,00 y el tiempo pasa volando.</h2>
+      <h2>Para el despertador justo entre las 20,00,00 y las 20,01,00 para que te de tiempo a darte una ducha antes de ir.</h2>
+      <div class="modal-actions">
+        <button class="modal-btn" id="startBtn">Comenzar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/gameStorage.js"></script>
+  <script src="../../assets/sidePanel.js"></script>
+  <script>
+    // Lógica del juego
+    let running = false;
+    let rafId = null;
+    let startPerf = 0;
+    const BASE_START = 16.00; // segundos, arranca en 16,00,00
+    const LIMIT_END = 23.00;  // segundos
+
+    let attempts = 0;
+    let lastValue = 0;
+    let bestDelta = null; // distancia mínima a la ventana correcta (solo interno)
+
+    const display = document.getElementById('timerDisplay');
+    const retryInfo = document.getElementById('retryInfo');
+
+    // Sistema de reintentos
+    const MAX_FAILS = 3;
+    let fails = 0; // fallos acumulados en esta sesión
+    let lastMarked = null; // último tiempo marcado real (null si no hay)
+
+    function formatTri(n){
+      // Genera SS,CC,DD (segundos, centésimas, decenas de milésimas)
+      const sec = Math.floor(n);
+      const centi = Math.floor(n * 100) % 100; // 0..99
+      const deciMilli = Math.floor(n * 1000) % 10; // 0..9
+      const two = (v)=> String(v).padStart(2,'0');
+      return `${two(sec)},${two(centi)},${two(deciMilli*10)}`;
+    }
+
+    // HUD superior eliminado por petición
+    function updateRetryHud(){
+      if (!retryInfo) return;
+      const left = Math.max(0, MAX_FAILS - fails);
+      const lastTxt = (lastMarked === null) ? '--' : formatTri(lastMarked);
+      retryInfo.textContent = `Intentos restantes: ${left} | Último: ${lastTxt}`;
+    }
+
+    function loop(){
+      if (!running) return;
+      const elapsed = (performance.now() - startPerf) / 1000; // s
+      let current = BASE_START + elapsed;
+      if (current >= LIMIT_END){
+        current = LIMIT_END;
+        display.textContent = formatTri(current);
+        stopAndEvaluate(current); // auto-derrota por pasarse
+        return;
+      }
+      display.textContent = formatTri(current);
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function startGame(){
+      attempts++;
+      lastValue = BASE_START;
+      running = true;
+      startPerf = performance.now();
+      cancelAnimationFrame(rafId);
+      display.textContent = formatTri(BASE_START);
+      rafId = requestAnimationFrame(loop);
+      updateRetryHud();
+    }
+
+    function stopAndEvaluate(current){
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(rafId);
+      lastValue = current;
+      const winStart = 20.00;
+      const winEnd = 20.01; // 20,01,00
+      const inWindow = current >= winStart && current < winEnd;
+      let delta = 0;
+      if (!inWindow) {
+        if (current < winStart) delta = (winStart - current);
+        else delta = (current - winEnd);
+      }
+      if (bestDelta === null || delta < bestDelta) bestDelta = delta;
+
+      if (inWindow){
+        lastMarked = current;
+        // Al mostrar modal de victoria, reiniciar fallos
+        fails = 0;
+        updateRetryHud();
+        const winEl = document.getElementById('winModal');
+        if (winEl) {
+          const msg = winEl.querySelector('.modal-content h3');
+          if (msg) {
+            // añade el tiempo marcado al mensaje
+            msg.textContent = `${msg.textContent.split(' — ')[0]} — Tiempo: ${formatTri(lastMarked)}`;
+          }
+          winEl.classList.remove('hidden');
+        }
+        try { if (window.GameStorage && window.GameStorage.updateGameScore) window.GameStorage.updateGameScore('wakeupbongo', Math.round((11 - current) * 100)); } catch(e){}
+      } else {
+        // fallo de intento
+        lastMarked = current;
+        fails += 1;
+        const left = MAX_FAILS - fails;
+        updateRetryHud();
+        if (left <= 0){
+          // fallo definitivo: reiniciar fallos al mostrar modal
+          fails = 0;
+          updateRetryHud();
+          const overEl = document.getElementById('gameOverModal');
+          if (overEl) overEl.classList.remove('hidden');
+        } else {
+          // reiniciar automáticamente desde el inicio tras un breve respiro
+          setTimeout(() => { resetGame(); startGame(); }, 600);
+        }
+      }
+    }
+
+    display.addEventListener('click', () => {
+      const txt = display.textContent.replaceAll(',', '.');
+      const parts = txt.split('.');
+      let val = 0;
+      if (parts.length >= 2) {
+        const sec = parseInt(parts[0]||'0',10);
+        const centi = parseInt(parts[1]||'0',10);
+        const deciMilli = parseInt(parts[2]||'0',10); // 0..90 step 10
+        val = sec + centi/100 + (deciMilli/10)/1000;
+      } else {
+        val = parseFloat(txt);
+      }
+      stopAndEvaluate(val);
+    });
+
+    // Panel lateral
+    let panelStats = { intentos: 0, ultimo: '16,00,00', estado: '⏸️ Listo' };
+    let panelOptions = { velocidad: 'normal' };
+
+    function initSidePanel(){
+      if (!window.SidePanel) return;
+      window.SidePanel.createSidePanel({
+        gameName: 'Wake Up Bongo',
+        gameId: 'wakeupbongo',
+        stats: panelStats,
+        options: panelOptions,
+        optionsTemplate: `
+          <div class="panel-section">
+            <h4>⚙️ Controles</h4>
+            <div class="option-item"><span class="option-label">Parar</span><span class="option-value">click en contador</span></div>
+          </div>
+        `,
+        onBack: () => window.location.href = '../index.html',
+        onRestart: () => { resetGame(); },
+        onOptionChange: () => {}
+      });
+    }
+    document.addEventListener('DOMContentLoaded', initSidePanel);
+
+    // Sincronizar stats al panel
+    setInterval(() => {
+      if (!window.SidePanel) return;
+      panelStats.intentos = attempts;
+      panelStats.ultimo = formatTri(lastValue);
+      panelStats.estado = running ? '🔄 En curso' : '⏸️ Listo';
+      window.SidePanel.updateSidePanelStats(panelStats);
+    }, 300);
+
+    // Modales
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('startModal').classList.add('hidden');
+      startGame();
+    });
+    document.getElementById('winBackBtn').addEventListener('click', () => window.location.href = '../index.html');
+    document.getElementById('overBackBtn').addEventListener('click', () => window.location.href = '../index.html');
+    document.getElementById('winRestartBtn').addEventListener('click', () => { document.getElementById('winModal').classList.add('hidden'); resetGame(); startGame(); });
+    document.getElementById('overRestartBtn').addEventListener('click', () => { document.getElementById('gameOverModal').classList.add('hidden'); resetGame(); startGame(); });
+
+    function resetGame(){
+      running = false; cancelAnimationFrame(rafId);
+      lastValue = BASE_START; display.textContent = formatTri(BASE_START);
+    }
+  </script>
+</body>
+</html>
