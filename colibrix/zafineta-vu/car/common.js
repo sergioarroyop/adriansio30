@@ -131,7 +131,6 @@ var Game = {  // a modified version of the game loop from my previous boulderdas
         requestAnimationFrame(frame, canvas);
       }
       frame(); // lets get this party started
-      Game.playMusic();
     });
   },
 
@@ -150,9 +149,72 @@ var Game = {  // a modified version of the game loop from my previous boulderdas
       var name = names[n];
       result[n] = document.createElement('img');
       Dom.on(result[n], 'load', onload);
-      var base = (window.Game && Game.imagePath) ? Game.imagePath : 'images/';
+      Dom.on(result[n], 'error', function(){
+        // en caso de fallo de carga, continuar para no bloquear el juego
+        onload();
+      });
+      var base = (window.Game && Game.imagePath) ? Game.imagePath : 'car/images/';
       result[n].src = base + name + ".png";
     }
+  },
+
+  // Carga opcional de sprites individuales desde carpeta (no bloqueante)
+  loadSpriteFolder: function(baseFolder) {
+    try {
+      if (!baseFolder) baseFolder = 'car/images/sprites/';
+      if (!window.SPRITES) return;
+      if (!window.SPRITE_IMAGES) window.SPRITE_IMAGES = new Map();
+      Object.keys(SPRITES).forEach(function(key){
+        var def = SPRITES[key];
+        // Saltar claves que no representan un sprite individual (arrays, números, null, o sin x/y/w/h)
+        if (Array.isArray(def) || def === null || typeof def !== 'object' ||
+            typeof def.x === 'undefined' || typeof def.y === 'undefined' ||
+            typeof def.w === 'undefined' || typeof def.h === 'undefined') {
+          return;
+        }
+        if (window.SPRITE_IMAGES.has(def)) return;
+        var img = new Image();
+        img.onload = function(){};
+        img.onerror = function(){};
+        var bust = (window.SPRITE_VERSION || Date.now());
+        img.src = baseFolder + key.toLowerCase() + '.png?cb=' + bust;
+        window.SPRITE_IMAGES.set(def, img);
+      });
+    } catch(e) {}
+  },
+
+  // Fuerza que todos los sprites del jugador usen una única imagen
+  setUnifiedPlayerImage: function(imgPath) {
+    try {
+      if (!window.SPRITE_IMAGES) window.SPRITE_IMAGES = new Map();
+      var img = new Image();
+      img.onload = function(){
+        // Actualizar dimensiones de todos los sprites del jugador al tamaño real de la imagen
+        [
+          'PLAYER_STRAIGHT','PLAYER_LEFT','PLAYER_RIGHT',
+          'PLAYER_UPHILL_STRAIGHT','PLAYER_UPHILL_LEFT','PLAYER_UPHILL_RIGHT'
+        ].forEach(function(k){
+          if (window.SPRITES && window.SPRITES[k]) {
+            var def = window.SPRITES[k];
+            if (img.naturalWidth)  def.w = img.naturalWidth;
+            if (img.naturalHeight) def.h = img.naturalHeight;
+            window.SPRITE_IMAGES.set(def, img);
+          }
+        });
+      };
+      var bust = (window.SPRITE_VERSION || Date.now());
+      img.src = (imgPath || 'car/images/sprites/player.png') + '?cb=' + bust;
+      // Mapear inmediatamente (aunque aún no haya cargado) para que Render use este img
+      [
+        'PLAYER_STRAIGHT','PLAYER_LEFT','PLAYER_RIGHT',
+        'PLAYER_UPHILL_STRAIGHT','PLAYER_UPHILL_LEFT','PLAYER_UPHILL_RIGHT'
+      ].forEach(function(k){
+        if (window.SPRITES && window.SPRITES[k]) {
+          var def = window.SPRITES[k];
+          window.SPRITE_IMAGES.set(def, img);
+        }
+      });
+    } catch(e) {}
   },
 
   //---------------------------------------------------------------------------
@@ -201,21 +263,6 @@ var Game = {  // a modified version of the game loop from my previous boulderdas
     }, 5000);
     return result;
   },
-
-  //---------------------------------------------------------------------------
-
-  playMusic: function() {
-    var music = Dom.get('music');
-    music.loop = true;
-    music.volume = 0.05; // shhhh! annoying music!
-    music.muted = (Dom.storage.muted === "true");
-    music.play();
-    Dom.toggleClassName('mute', 'on', music.muted);
-    Dom.on('mute', 'click', function() {
-      Dom.storage.muted = music.muted = !music.muted;
-      Dom.toggleClassName('mute', 'on', music.muted);
-    });
-  }
 
 }
 
@@ -292,18 +339,34 @@ var Render = {
 
   //---------------------------------------------------------------------------
 
-  sprite: function(ctx, width, height, resolution, roadWidth, sprites, sprite, scale, destX, destY, offsetX, offsetY, clipY) {
+  sprite: function(ctx, width, height, resolution, roadWidth, spritesheet, sprite, scale, destX, destY, offsetX, offsetY, clipY) {
 
-                    //  scale for projection AND relative to roadWidth (for tweakUI)
-    var destW  = (sprite.w * scale * width/2) * (SPRITES.SCALE * roadWidth);
-    var destH  = (sprite.h * scale * width/2) * (SPRITES.SCALE * roadWidth);
+    // Si existen imágenes individuales cargadas y listas, usarlas
+    var sImg = (window.SPRITE_IMAGES && window.SPRITE_IMAGES.get(sprite)) || null;
+    var ready = !!(sImg && sImg.complete && (sImg.naturalWidth || sImg.width));
+    var srcW = ready ? (sImg.naturalWidth || sImg.width) : sprite.w;
+    var srcH = ready ? (sImg.naturalHeight || sImg.height) : sprite.h;
+
+    //  scale for projection AND relative to roadWidth (for tweakUI)
+    var destW  = (srcW * scale * width/2) * (SPRITES.SCALE * roadWidth);
+    var destH  = (srcH * scale * width/2) * (SPRITES.SCALE * roadWidth);
 
     destX = destX + (destW * (offsetX || 0));
     destY = destY + (destH * (offsetY || 0));
 
     var clipH = clipY ? Math.max(0, destY+destH-clipY) : 0;
-    if (clipH < destH)
-      ctx.drawImage(sprites, sprite.x, sprite.y, sprite.w, sprite.h - (sprite.h*clipH/destH), destX, destY, destW, destH - clipH);
+    if (clipH < destH) {
+      try {
+        if (ready) {
+          ctx.drawImage(sImg, 0, 0, srcW, srcH - (srcH*clipH/destH), destX, destY, destW, destH - clipH);
+        } else {
+          ctx.drawImage(spritesheet, sprite.x, sprite.y, srcW, srcH - (srcH*clipH/destH), destX, destY, destW, destH - clipH);
+        }
+      } catch(e) {
+        // Fallback seguro al atlas en caso de imagen individual rota
+        ctx.drawImage(spritesheet, sprite.x, sprite.y, sprite.w, sprite.h - (sprite.h*clipH/destH), destX, destY, destW, destH - clipH);
+      }
+    }
 
   },
 
@@ -320,7 +383,19 @@ var Render = {
     else
       sprite = (updown > 0) ? SPRITES.PLAYER_UPHILL_STRAIGHT : SPRITES.PLAYER_STRAIGHT;
 
-    Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite, scale, destX, destY + bounce, -0.5, -1);
+    // Calcular altura dibujada para evitar cortes con PNGs más altos
+    var img = (window.SPRITE_IMAGES && window.SPRITE_IMAGES.get(sprite)) || null;
+    var srcH = img ? (img.naturalHeight || img.height || sprite.h) : sprite.h;
+    var drawH = (srcH * scale * width/2) * (SPRITES.SCALE * roadWidth);
+    // Con offsetY = -1 el fondo del sprite queda en destY. Aseguramos que
+    // el fondo del sprite no supere el borde inferior y que no salga por arriba.
+    var bottomY = destY + bounce;
+    var minBottom = Math.max(drawH, 0);         // al menos su altura para no recortar por arriba
+    var maxBottom = height - 2;                 // un pequeño margen inferior
+    if (bottomY > maxBottom) bottomY = maxBottom;
+    if (bottomY < minBottom) bottomY = minBottom;
+
+    Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite, scale, destX, bottomY, -0.5, -1);
   },
 
   //---------------------------------------------------------------------------
@@ -348,6 +423,7 @@ var KEY = {
   UP:    38,
   RIGHT: 39,
   DOWN:  40,
+  SHIFT: 16,
   A:     65,
   D:     68,
   S:     83,
