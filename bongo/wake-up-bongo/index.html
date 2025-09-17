@@ -5,6 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Wake Up, Bongo</title>
   <link rel="stylesheet" href="../../assets/style.css">
+  <style>
+    /* Marco con la imagen del despertador */
+    #timerBox { display:flex; align-items:center; justify-content:center; padding: 12px; }
+    .clock { position: relative; width: min(740px, 96vw); display: inline-block; }
+    .clock-img { display:block; width:100%; height:auto; }
+    /* Zona de pantalla blanca (coordenadas aproximadas en porcentaje) */
+    .screen {
+      position: absolute;
+      left: 13.5%;
+      top: 37.5%;
+      width: 73%;
+      height: 29%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none; /* que no intercepte el click del botón */
+    }
+    #timerDisplay {
+      font-family: 'DS-Digital','Digital-7','Seven Segment','Orbitron','Share Tech Mono','Courier New', monospace;
+      font-weight: 700;
+      font-size: clamp(1.5rem, 7.2vw, 4.8rem);
+      color: #0c0c0c;
+      letter-spacing: 0.12rem;
+      line-height: 0.96;
+      text-shadow: 0 0 0 transparent;
+      user-select: none;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    /* Hotspot sobre el botón superior centrado (sin estilo, clicable) */
+    .stop-hotspot {
+      position: absolute;
+      top: 14%;
+      left: 67%;
+      width: 17%;
+      height: 9%;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .stop-hotspot:focus, .stop-hotspot:focus-visible { outline: none; }
+  </style>
 </head>
 <body>
   <div id="container">
@@ -13,20 +58,19 @@
         Intentos restantes: 3 | Último: --
       </div>
       <div id="timerBox" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-        <div id="timerDisplay" style="
-          font-family: 'DS-Digital','Digital-7','Seven Segment','Orbitron','Share Tech Mono','Courier New', monospace;
-          font-weight: 700;
-          font-size: clamp(2.6rem, 12vw, 7.2rem);
-          color: #222;
-          letter-spacing: 0.12rem;
-          user-select: none;
-          cursor: pointer;
-          background: rgba(255,255,255,0.7);
-          padding: .6rem 1rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.15);
-        ">16,00,00</div>
+        <div class="clock" role="group" aria-label="Despertador">
+          <img class="clock-img" src="https://i.postimg.cc/Hxsm4DYX/reloj-despertador-digital.png" alt="Despertador digital">
+          <div class="screen">
+            <div id="timerDisplay">16,00,00</div>
+          </div>
+          <button type="button" class="stop-hotspot" id="stopButton" aria-label="Parar despertador"></button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Audio de despertador -->
+  <audio id="wakeAudio" src="../../sounds/wakemeup.mp3" preload="auto" loop></audio>
 
   <!-- Modales comunes -->
   <div id="winModal" class="hidden">
@@ -78,6 +122,19 @@
 
     const display = document.getElementById('timerDisplay');
     const retryInfo = document.getElementById('retryInfo');
+    const wakeAudio = document.getElementById('wakeAudio');
+
+    function playWake(){
+      if (!wakeAudio) return;
+      try { wakeAudio.currentTime = 0; } catch(e){}
+      const p = wakeAudio.play();
+      if (p && p.catch) p.catch(()=>{});
+    }
+    function stopWake(){
+      if (!wakeAudio) return;
+      try { wakeAudio.pause(); } catch(e){}
+      try { wakeAudio.currentTime = 0; } catch(e){}
+    }
 
     // Sistema de reintentos
     const MAX_FAILS = 3;
@@ -146,6 +203,7 @@
         // Al mostrar modal de victoria, reiniciar fallos
         fails = 0;
         updateRetryHud();
+        stopWake();
         const winEl = document.getElementById('winModal');
         if (winEl) {
           const msg = winEl.querySelector('.modal-content h3');
@@ -166,6 +224,7 @@
           // fallo definitivo: reiniciar fallos al mostrar modal
           fails = 0;
           updateRetryHud();
+          stopWake();
           const overEl = document.getElementById('gameOverModal');
           if (overEl) overEl.classList.remove('hidden');
         } else {
@@ -175,20 +234,26 @@
       }
     }
 
-    display.addEventListener('click', () => {
+    function getDisplayValue(){
       const txt = display.textContent.replaceAll(',', '.');
       const parts = txt.split('.');
-      let val = 0;
       if (parts.length >= 2) {
         const sec = parseInt(parts[0]||'0',10);
         const centi = parseInt(parts[1]||'0',10);
         const deciMilli = parseInt(parts[2]||'0',10); // 0..90 step 10
-        val = sec + centi/100 + (deciMilli/10)/1000;
-      } else {
-        val = parseFloat(txt);
+        return sec + centi/100 + (deciMilli/10)/1000;
       }
-      stopAndEvaluate(val);
-    });
+      const f = parseFloat(txt);
+      return Number.isFinite(f) ? f : BASE_START;
+    }
+
+    // El paro se acciona desde el botón de la imagen (arriba a la derecha)
+    const stopBtn = document.getElementById('stopButton');
+    if (stopBtn) {
+      stopBtn.addEventListener('click', () => {
+        stopAndEvaluate(getDisplayValue());
+      });
+    }
 
     // Panel lateral
     let panelStats = { intentos: 0, ultimo: '16,00,00', estado: '⏸️ Listo' };
@@ -204,7 +269,7 @@
         optionsTemplate: `
           <div class="panel-section">
             <h4>⚙️ Controles</h4>
-            <div class="option-item"><span class="option-label">Parar</span><span class="option-value">click en contador</span></div>
+            <div class="option-item"><span class="option-label">Parar</span><span class="option-value">click en botón (arriba dcha.)</span></div>
           </div>
         `,
         onBack: () => window.location.href = '../index.html',
@@ -227,11 +292,12 @@
     document.getElementById('startBtn').addEventListener('click', () => {
       document.getElementById('startModal').classList.add('hidden');
       startGame();
+      playWake();
     });
-    document.getElementById('winBackBtn').addEventListener('click', () => window.location.href = '../index.html');
-    document.getElementById('overBackBtn').addEventListener('click', () => window.location.href = '../index.html');
-    document.getElementById('winRestartBtn').addEventListener('click', () => { document.getElementById('winModal').classList.add('hidden'); resetGame(); startGame(); });
-    document.getElementById('overRestartBtn').addEventListener('click', () => { document.getElementById('gameOverModal').classList.add('hidden'); resetGame(); startGame(); });
+    document.getElementById('winBackBtn').addEventListener('click', () => { stopWake(); window.location.href = '../index.html'; });
+    document.getElementById('overBackBtn').addEventListener('click', () => { stopWake(); window.location.href = '../index.html'; });
+    document.getElementById('winRestartBtn').addEventListener('click', () => { stopWake(); document.getElementById('winModal').classList.add('hidden'); resetGame(); startGame(); playWake(); });
+    document.getElementById('overRestartBtn').addEventListener('click', () => { stopWake(); document.getElementById('gameOverModal').classList.add('hidden'); resetGame(); startGame(); playWake(); });
 
     function resetGame(){
       running = false; cancelAnimationFrame(rafId);

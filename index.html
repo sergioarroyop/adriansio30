@@ -172,8 +172,8 @@
     <p>Toma asiento.</p>
     <nav>
       <a class="menu-link" href="adriansito/">Adriansito</a>
-      <a class="menu-link" href="bonguito/" disabled>Cuming soon... Disponible día 18</a>
-      <a class="menu-link" href="colibrix/" disabled>Cuming soon... Disponible día 19</a>
+      <a id="link-bonguito" class="menu-link" href="bonguito/" disabled>Cuming soon... Disponible día 18</a>
+      <a id="link-colibrix" class="menu-link" href="colibrix/" disabled>Cuming soon... Disponible día 19</a>
     </nav>
   </main>
   <audio id="bgAudio" src="sounds/weird.mp3" loop autoplay muted playsinline></audio>
@@ -189,6 +189,33 @@
       audio.addEventListener('canplay', () => {
         setTimeout(() => { try { audio.muted = false; } catch(e){} }, 150);
       }, { once: true });
+    })();
+
+    // Desbloqueo automático de menús por fecha (como en c2VyZ2lvaG9tbw.html)
+    (function(){
+      const linkB = document.getElementById('link-bonguito');
+      const linkC = document.getElementById('link-colibrix');
+      if (!linkB || !linkC) return;
+
+      // Mes 8 = Septiembre (Date usa 0-based para mes)
+      const unlockB = new Date(2025, 8, 18, 0, 0, 0); // 18/09/2025 00:00
+      const unlockC = new Date(2025, 8, 19, 0, 0, 0); // 19/09/2025 00:00
+
+      function updateLocks(){
+        const now = new Date();
+        if (now >= unlockB && linkB.hasAttribute('disabled')) {
+          linkB.removeAttribute('disabled');
+          linkB.textContent = 'Bonguito';
+        }
+        if (now >= unlockC && linkC.hasAttribute('disabled')) {
+          linkC.removeAttribute('disabled');
+          linkC.textContent = 'Colibrix';
+        }
+      }
+
+      updateLocks();
+      // Revisión periódica por si la página queda abierta
+      setInterval(updateLocks, 60000);
     })();
   </script>
 </body>
