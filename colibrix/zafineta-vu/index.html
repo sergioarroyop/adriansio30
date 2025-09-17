@@ -232,6 +232,12 @@
         if (a) { a.pause(); a.currentTime = 0; }
       } catch(e){}
       try {
+        if (window.GameStorage) {
+          window.GameStorage.markGameCompleted('zafineta-vu');
+          window.GameStorage.updateGameScore('zafineta-vu', Math.max(1, Math.floor((baseMaxSpeed||1)*10)));
+        }
+      } catch(e){}
+      try {
         var m = document.getElementById('winModal');
         if (m) m.classList.remove('hidden');
       } catch(e){}

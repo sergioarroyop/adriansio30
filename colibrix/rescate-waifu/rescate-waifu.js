@@ -174,8 +174,8 @@
     updatePanel();
     if (window.GameStorage) {
       try {
-        window.GameStorage.updateGameScore('juego1', hits);
-        window.GameStorage.markGameCompleted('juego1');
+        window.GameStorage.updateGameScore('rescate-waifu', hits);
+        window.GameStorage.markGameCompleted('rescate-waifu');
       } catch(e){}
     }
     showModal('winModal');

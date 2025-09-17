@@ -103,6 +103,13 @@
       }
     });
   </script>
+  <script>
+    // Actualizar estados de juegos según GameStorage
+    (function(){
+      if (!window.GameStorage) return;
+      try { window.GameStorage.updateGameLinks(); } catch(e){}
+    })();
+  </script>
 </body>
 </html>
 <!-- Audio de fondo de cumpleaños -->

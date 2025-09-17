@@ -18,25 +18,26 @@ const STORAGE_KEY = `birthdayGameData:${STORAGE_NS}`;
 const LEGACY_KEY = `adrianBirthdayGameData:${STORAGE_NS}`;
 
 // ===== Estructura de datos por defecto =====
-const defaultGameData = {
-  scores: {
-    juego1: 0,
-    juego2: 0,
-    juego3: 0
-  },
-  completed: {
-    juego1: false,
-    juego2: false,
-    juego3: false
-  },
-  options: {
-    immortalMode: false,
-    soundEnabled: true,
-    difficulty: 'normal'
-  },
-  lastPlayed: null,
-  totalPlayTime: 0
+const GAMES_BY_NS = {
+  adriansito: ['alcantara-en-apuros','shempions-league','pesadilla-cocina'],
+  bongo:      ['alcantara-en-apuros','cheetos-pandilla','wake-up-bongo'],
+  colibrix:   ['rescate-waifu','zafineta-vu']
 };
+
+function buildDefaultData(ns) {
+  const ids = GAMES_BY_NS[ns] || [];
+  const scores = {}; const completed = {};
+  ids.forEach(id => { scores[id] = 0; completed[id] = false; });
+  return {
+    scores,
+    completed,
+    options: { immortalMode: false, soundEnabled: true, difficulty: 'normal' },
+    lastPlayed: null,
+    totalPlayTime: 0
+  };
+}
+
+const defaultGameData = buildDefaultData(STORAGE_NS);
 
 // ===== Funciones de gestión del localStorage =====
 
@@ -50,12 +51,13 @@ function getGameData() {
     if (stored) {
       const data = JSON.parse(stored);
       // Asegurar que todos los campos requeridos existen
+      const baseline = buildDefaultData(STORAGE_NS);
       return {
-        ...defaultGameData,
+        ...baseline,
         ...data,
-        scores: { ...defaultGameData.scores, ...data.scores },
-        completed: { ...defaultGameData.completed, ...data.completed },
-        options: { ...defaultGameData.options, ...data.options }
+        scores: { ...baseline.scores, ...data.scores },
+        completed: { ...baseline.completed, ...data.completed },
+        options: { ...baseline.options, ...data.options }
       };
     }
   } catch (error) {
@@ -120,7 +122,8 @@ function updateGameOptions(options) {
  */
 function areAllGamesCompleted() {
   const data = getGameData();
-  return data.completed.juego1 && data.completed.juego2 && data.completed.juego3;
+  const ids = Object.keys(data.completed);
+  return ids.length > 0 && ids.every(k => !!data.completed[k]);
 }
 
 /**
@@ -170,40 +173,36 @@ function getGameStats(gameId) {
  * Actualiza el estado de los enlaces de juegos en el menú principal
  */
 function updateGameLinks() {
-  const progress = getGameProgress();
+  // Actualiza estado de cada enlace leyendo la carpeta/slug del href
+  const links = Array.from(document.querySelectorAll('.gameLink'));
+  let total = 0, done = 0;
+  links.forEach(link => {
+    const href = link.getAttribute('href') || '';
+    if (href.endsWith('fiesta.html')) return;
+    const parts = href.split('/');
+    const id = parts[parts.length - (href.endsWith('.html') ? 2 : 1)] || '';
+    if (!id) return;
+    total++;
+    const stats = getGameStats(id);
+    if (stats.completed) { done++; link.classList.add('completed'); link.innerHTML = link.innerHTML.replace('🎮','✅'); }
+    else { link.classList.remove('completed'); link.innerHTML = link.innerHTML.replace('✅','🎮'); }
+  });
+  // Fiesta
   const fiestaLink = document.querySelector('.gameLink[href$="fiesta.html"]');
-  
   if (fiestaLink) {
-    if (progress.allCompleted) {
-      // Desbloquear fiesta
+    const allCompleted = total > 0 && done === total;
+    if (allCompleted) {
       fiestaLink.classList.remove('locked');
       fiestaLink.style.opacity = '1';
       fiestaLink.style.pointerEvents = 'auto';
       fiestaLink.title = '¡Fiesta desbloqueada! 🎉';
     } else {
-      // Bloquear fiesta
       fiestaLink.classList.add('locked');
       fiestaLink.style.opacity = '0.5';
       fiestaLink.style.pointerEvents = 'none';
-      fiestaLink.title = `Completa todos los juegos para desbloquear la fiesta (${progress.completed}/${progress.total})`;
+      fiestaLink.title = `Completa todos los juegos para desbloquear la fiesta (${done}/${total})`;
     }
   }
-  
-  // Actualizar indicadores de progreso en otros enlaces
-  const gameLinks = Array.from(document.querySelectorAll('.gameLink'))
-    .filter(link => !(link.getAttribute('href') || '').endsWith('fiesta.html'));
-  gameLinks.forEach((link, index) => {
-    const gameId = `juego${index + 1}`;
-    const stats = getGameStats(gameId);
-    
-    if (stats.completed) {
-      link.classList.add('completed');
-      link.innerHTML = link.innerHTML.replace('🎮', '✅');
-    } else {
-      link.classList.remove('completed');
-      link.innerHTML = link.innerHTML.replace('✅', '🎮');
-    }
-  });
 }
 
 /**
@@ -232,11 +231,10 @@ function showProgressMessage() {
  * @param {number} floor - Piso alcanzado (1-5)
  */
 function onJuego1Complete(floor) {
-  if (floor >= 5) {
-    markGameCompleted('juego1');
-    updateGameScore('juego1', floor);
-    console.log('Juego 1 completado: Descenso 5 Pisos');
-  }
+  const ids = GAMES_BY_NS[STORAGE_NS] || [];
+  const id = ids[0] || 'juego1';
+  markGameCompleted(id);
+  updateGameScore(id, floor || 1);
 }
 
 /**
@@ -244,18 +242,20 @@ function onJuego1Complete(floor) {
  * @param {number} score - Puntuación final
  */
 function onJuego2Complete(score) {
-  updateGameScore('juego2', score);
-  markGameCompleted('juego2');
-  console.log(`Juego 2 completado: T-Rex Runner con ${score} puntos`);
+  const ids = GAMES_BY_NS[STORAGE_NS] || [];
+  const id = ids[1] || 'juego2';
+  updateGameScore(id, score || 0);
+  markGameCompleted(id);
 }
 
 /**
  * Función para ser llamada cuando se completa el Juego 3 (Aventura Épica)
  */
-function onJuego3Complete() {
-  markGameCompleted('juego3');
-  updateGameScore('juego3', 100); // Puntuación fija para juego 3
-  console.log('Juego 3 completado: Aventura Épica');
+function onJuego3Complete(score=100) {
+  const ids = GAMES_BY_NS[STORAGE_NS] || [];
+  const id = ids[2] || 'juego3';
+  markGameCompleted(id);
+  updateGameScore(id, score);
 }
 
 // ===== Inicialización automática =====
