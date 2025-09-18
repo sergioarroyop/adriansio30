@@ -90,12 +90,17 @@ function randomFactory() {
     let e = Math.random() * 30;
     let g = Math.floor(e);
     
-    if(arrFactory.indexOf(box[g].dataset.value) == -1) {
-        arrFactory.push(box[g].dataset.value);
-        box[g].classList.add('red');
-        box[g].classList.remove('green');
-        box[g].classList.add('factory');
-        window.HUESITOS_STATE.factories = arrFactory.length;
+  if(arrFactory.indexOf(box[g].dataset.value) == -1) {
+      arrFactory.push(box[g].dataset.value);
+      box[g].classList.add('red');
+      box[g].classList.remove('green');
+      box[g].classList.add('factory');
+      // Si había overlay de clic (bongo2), eliminarlo para que quede solo la imagen roja
+      try {
+        const ov = box[g].querySelector('.click-overlay');
+        if (ov) ov.remove();
+      } catch(e){}
+      window.HUESITOS_STATE.factories = arrFactory.length;
         // Si este robo era un árbol previamente plantado, notificar
         if (arrTree.indexOf(box[g].dataset.value) != -1) {
             arrTree.splice(arrTree.indexOf(box[g].dataset.value), 1);

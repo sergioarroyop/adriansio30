@@ -99,7 +99,7 @@
     <div class="modal-content">
       <h1>¡Wake up! Bongo</h1>
       <h2>Nooooo, te has echado una siesta en el día de tu cumpleaños, vas a llegar tarde a la fiesta. Acabas de dormirte a las 16,00,00 y el tiempo pasa volando.</h2>
-      <h2>Para el despertador justo entre las 20,00,00 y las 20,01,00 para que te de tiempo a darte una ducha antes de ir.</h2>
+      <h2>Para el despertador dándole al botón justo entre las 20,00,00 y las 20,01,00 para que te de tiempo a darte una ducha antes de ir.</h2>
       <div class="modal-actions">
         <button class="modal-btn" id="startBtn">Comenzar</button>
       </div>
@@ -108,6 +108,16 @@
 
   <script src="../../assets/gameStorage.js"></script>
   <script src="../../assets/sidePanel.js"></script>
+  <!-- Audio de fondo de cumpleaños -->
+  <audio id="bgBirthday" src="../../sounds/birthday.mp3" loop></audio>
+  <script>
+    (function(){
+      const a = document.getElementById('bgBirthday');
+      if (!a) return;
+      a.volume = 0.6;
+      a.play().catch(()=>{});
+    })();
+  </script>
   <script>
     // Lógica del juego
     let running = false;
@@ -190,7 +200,7 @@
       lastValue = current;
       const winStart = 20.00;
       const winEnd = 20.01; // 20,01,00
-      const inWindow = current >= winStart && current < winEnd;
+      const inWindow = current >= winStart && current <= winEnd;
       let delta = 0;
       if (!inWindow) {
         if (current < winStart) delta = (winStart - current);
@@ -213,7 +223,12 @@
           }
           winEl.classList.remove('hidden');
         }
-        try { if (window.GameStorage && window.GameStorage.updateGameScore) window.GameStorage.updateGameScore('wakeupbongo', Math.round((11 - current) * 100)); } catch(e){}
+        try {
+          if (window.GameStorage) {
+            window.GameStorage.markGameCompleted('wake-up-bongo');
+            window.GameStorage.updateGameScore('wake-up-bongo', Math.round((11 - current) * 100));
+          }
+        } catch(e){}
       } else {
         // fallo de intento
         lastMarked = current;
@@ -269,7 +284,7 @@
         optionsTemplate: `
           <div class="panel-section">
             <h4>⚙️ Controles</h4>
-            <div class="option-item"><span class="option-label">Parar</span><span class="option-value">click en botón (arriba dcha.)</span></div>
+            <div class="option-item"><span class="option-label">Parar</span><span class="option-value">Click del ratón en el botón del despertador</span></div>
           </div>
         `,
         onBack: () => window.location.href = '../index.html',
