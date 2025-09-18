@@ -386,7 +386,7 @@ NO MIRES EL CÓDIGO, RATA
         bgCreepy.play().catch(()=>{});
       }
 
-      const targetDate = new Date(2025, 8, 20, 0, 0, 0); // 20/09/2025 00:00
+      const targetDate = new Date(2025, 8, 19, 15, 0, 0); // 20/09/2025 00:00
       const unlockBongo = new Date(2025, 8, 18, 0, 0, 0); // 18/09/2025 00:00
       const unlockColibro = new Date(2025, 8, 19, 0, 0, 0); // 19/09/2025 00:00
       const expected = { adriansito: 'hashbulla', bongo: 'yo-es-que-si-quiero-separar-un-espacio-en-blanco-en-javascript-literalmengghhahsh', colibro: 'daredevil' };
@@ -490,12 +490,12 @@ NO MIRES EL CÓDIGO, RATA
         const correctCount = Object.values(matches).filter(Boolean).length;
 
         if (correctCount === 3) {
-          //const now = new Date();
-          //if (now >= targetDate) {
-          triggerGlitchFinale();
-          //} else {
-          //  setFeedback('No te pases de listo, no mires donde no debas');
-          //}
+          const now = new Date();
+          if (now >= targetDate) {
+            triggerGlitchFinale();
+          } else {
+            setFeedback('Aún no es el momento. Quedan ' + countdownEl);
+          }
           return;
         }
         if (correctCount == 1) {
