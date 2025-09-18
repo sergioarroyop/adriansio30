@@ -211,16 +211,22 @@ function updateGameLinks() {
 function showProgressMessage() {
   const progress = getGameProgress();
   const statusElement = document.getElementById('partyStatus');
-  
-  if (statusElement) {
-    if (progress.allCompleted) {
-      statusElement.innerHTML = '🎉 ¡Fiesta DESBLOQUEADA! 🎉';
-      statusElement.style.color = '#4CAF50';
-    } else {
-      statusElement.innerHTML = `🚨 Estado de la Fiesta: ¡Necesitamos un milagro en el 93! 🚨<br>
-      Progreso: ${progress.completed}/${progress.total} juegos completados (${progress.percentage}%)
-      `;
-    }
+
+  if (!statusElement) return;
+
+  // Conservar el texto base propio de cada página (bongo/colibrix/adriansito)
+  // Se guarda en data-base la primera vez para no perderlo en refrescos
+  const baseMsg = statusElement.dataset.base || statusElement.innerHTML;
+  statusElement.dataset.base = baseMsg;
+
+  const progressLine = `Progreso: ${progress.completed}/${progress.total} juegos completados (${progress.percentage}%)`;
+
+  if (progress.allCompleted) {
+    statusElement.innerHTML = `🎉 ¡Fiesta DESBLOQUEADA! 🎉<br>${progressLine}`;
+    statusElement.style.color = '#4CAF50';
+  } else {
+    statusElement.innerHTML = `${baseMsg}<br>${progressLine}`;
+    statusElement.style.color = '';
   }
 }
 

@@ -361,7 +361,7 @@ NO MIRES EL CÓDIGO, RATA
     </form>
   </main>
   <div id="finalScreen" class="hidden" aria-hidden="true">
-    <div class="final-text" id="finalMessage">25 de Septiembre 2025, 20:15<br>40.477653, -3.369680</div>
+    <div class="final-text" id="finalMessage">25 de Septiembre 2025, 20:15<br>40.477653, -3.369680<br>Sed puntuales.</div>
   </div>
   <script>
     (() => {
@@ -490,12 +490,12 @@ NO MIRES EL CÓDIGO, RATA
         const correctCount = Object.values(matches).filter(Boolean).length;
 
         if (correctCount === 3) {
-          const now = new Date();
-          if (now >= targetDate) {
-            triggerGlitchFinale();
-          } else {
-            setFeedback('No te pases de listo, no mires donde no debas');
-          }
+          //const now = new Date();
+          //if (now >= targetDate) {
+          triggerGlitchFinale();
+          //} else {
+          //  setFeedback('No te pases de listo, no mires donde no debas');
+          //}
           return;
         }
         if (correctCount == 1) {
