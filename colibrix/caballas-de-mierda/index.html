@@ -279,7 +279,17 @@
         } else { balance = Math.max(0, balance + delta); }
       } catch(e) { balance = Math.max(0, balance + delta); }
 
-      if (balance >= 200){ updatePanel('🏆 ¡Has ganado!'); show('winModal'); return; }
+      if (balance >= 200){
+        try {
+          if (window.GameStorage) {
+            window.GameStorage.markGameCompleted(GAME_ID);
+            window.GameStorage.updateGameScore(GAME_ID, balance);
+          }
+        } catch(e){}
+        updatePanel('🏆 ¡Has ganado!');
+        show('winModal');
+        return;
+      }
       if (balance <= 0){ updatePanel('💸 Sin saldo'); show('gameOverModal'); return; }
 
       // Preparar listado de resultados y mostrar modal intermedio
