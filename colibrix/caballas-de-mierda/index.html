@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Caballas de mierda — Carrera con apuestas</title>
+  <link rel="stylesheet" href="../../assets/style.css" />
+  <script src="../../assets/gameStorage.js"></script>
+  <script src="../../assets/sidePanel.js"></script>
+  <style>
+    /* Modal mucho más ancho SOLO en esta página */
+    /* Lienzo centrado dentro del wrapper común */
+    #race { display:block; width:100%; height:100%; background: linear-gradient(to bottom, #e0ffec 60%, #ffc090 100%); }
+    /* Selector de corredor para el modal de inicio */
+    .runner-option { display:inline-flex; flex-direction:column; align-items:center; gap:6px; padding:8px; border:2px solid transparent; border-radius:8px; cursor:pointer; }
+    .runner-option.selected { border-color:#ff6b6b; background:rgba(255,107,107,0.15); }
+    .runner-swatch { width:40px; height:40px; border-radius:6px; }
+    .runner-img { width:60px; height:60px; object-fit:cover; border-radius:8px; display:block; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="gameWrapper">
+      <canvas id="race" width="1000" height="800"></canvas>
+    </div>
+  </div>
+
+  <!-- Modales estilo común -->
+  <div id="startModal">
+    <div class="modal-content">
+      <h1>¡Arre Caballas! 🐟💩</h1>
+      <h2>Estás completamente tieso Colibrix, se te ha acabado el paro y necesitar dinero fácil para montar la fiesta. Tienes 50€ en el bolsillo, apuéstalos hasta llegar a los 200 necesarios para ganar.</h2>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:8px 0 6px;" id="runnerPicker"></div>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;margin:8px 0;">
+        <span id="balanceLabel">Saldo: €0</span>
+        <input id="betInput" type="number" min="0" step="1" value="0" style="width:120px;background:#222;color:#fff;border:1px solid #555;border-radius:8px;padding:8px;" />
+        <button class="modal-btn" id="betMaxBtn" type="button">Apostar todo</button>
+      </div>
+      <p style="margin:4px 0 10px;opacity:0.85;">Premios: 1º = x2 | 2º = +25% | 3º = +10% | 4º = 0</p>
+      <div class="modal-actions">
+        <button class="modal-btn" id="startBtn" disabled>A correr cerdas</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="winModal" class="hidden">
+    <div class="modal-content">
+      <h1>¡Lets fucking gooooo! 🏆</h1>
+      <h3>Ya tienes los 200 pavinos bro, tenemos para la fiesta y unes putes</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="winBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="winRestartBtn">Volver a apostar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="hidden">
+    <div class="modal-content">
+      <h1>Sin caballas… sin dinero 💸</h1>
+      <h3>Te has quedado tieso Colibrix. Te has puesto a pedir en la puerta como un mendigo y una vieja ricachona te ha dado 50€ por un trabajito, es tu día de suerte.</h3>
+      <div class="modal-actions">
+        <button class="modal-btn" id="overBackBtn">Volver al menú</button>
+        <button class="modal-btn" id="overRestartBtn">Volver a jugar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de resultados de carrera -->
+  <div id="resultsModal" class="hidden">
+    <div class="modal-content">
+      <h1>Resultados de la carrera 🏁</h1>
+      <div id="resultsList" style="margin:8px 0 14px; text-align:center;"></div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="resultsContinueBtn">Seguir apostando</button>
+        <button class="modal-btn" id="resultsBackBtn">Volver al menú</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio de fondo (opcional) -->
+  <audio id="bgBirthday" src="../../sounds/birthday.mp3" loop></audio>
+  <script>
+    (function(){
+      const a = document.getElementById('bgBirthday');
+      if (!a) return;
+      a.volume = 0.6; a.play().catch(()=>{});
+    })();
+  </script>
+
+  <script>
+  (function(){
+    const GAME_ID = 'caballas-de-mierda';
+
+    // SidePanel con saldo como "Puntuación"
+    let balance = 0, races = 0;
+    function initSidePanel(){
+      if (!window.SidePanel) return;
+      window.SidePanel.createSidePanel({
+        gameName: 'Caballas de mierda',
+        gameId: GAME_ID,
+        stats: { score: balance, level: races, status: '🔄 Esperando' },
+        options: { sound: true },
+        onBack: () => window.location.href = '../index.html',
+        onRestart: () => { showStart(); }
+      });
+    }
+    function updatePanel(status){
+      if (window.SidePanel) window.SidePanel.updateSidePanelStats({ score: balance, level: races, status });
+    }
+
+    // Canvas y pista
+    const canvas = document.getElementById('race');
+    const ctx = canvas.getContext('2d');
+    const LANE_HEIGHT = 150; // más alto para que se vea bien en 1000x800
+    const START_X = 30;
+    const WAIFU_SPRITES = ['waifu1.png','waifu2.png','waifu3.png','waifu4.png'];
+    const RUNNERS = [
+      { name:'Sakura',   color:'#ff6b6b', img: WAIFU_SPRITES[0] },
+      { name:'Miyu',     color:'#45b7d1', img: WAIFU_SPRITES[1] },
+      { name:'Yume',     color:'#4ecdc4', img: WAIFU_SPRITES[2] },
+      { name:'Rin',      color:'#feca57', img: WAIFU_SPRITES[3] }
+    ];
+    const RUNNER_IMAGES = RUNNERS.map(r => { const im = new Image(); im.src = r.img; return im; });
+    let FINISH_X = 820; // dentro de 1000px
+
+    let corredores = [], enCarrera = false, resultados = [], eleccion = null, apuesta = 0;
+
+    function sizeToWrapper(){
+      // Canvas ya es 1000x800 por CSS del wrapper; mantenemos valores lógicos
+      FINISH_X = canvas.width - 160;
+      drawPista(); drawCorredores();
+    }
+
+    function initCorredores(){
+      corredores = RUNNERS.map((r, i)=>{
+        const laneTop = i * LANE_HEIGHT;
+        const yCenter = laneTop + Math.floor(LANE_HEIGHT/2);
+        return { idx:i, nombre:r.name, color:r.color, x: START_X, y: yCenter, finished:false };
+      });
+      resultados = [];
+    }
+
+    function drawPista(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      for(let i=0;i<RUNNERS.length;i++){
+        ctx.fillStyle = (i%2? 'rgba(255,255,255,0.6)':'rgba(255,255,255,0.75)');
+        ctx.fillRect(0, i*LANE_HEIGHT, canvas.width, LANE_HEIGHT-4);
+        ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0,(i+1)*LANE_HEIGHT-2); ctx.lineTo(canvas.width,(i+1)*LANE_HEIGHT-2); ctx.stroke();
+      }
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillRect(FINISH_X+25, 10, 8, LANE_HEIGHT*RUNNERS.length-20);
+      ctx.fillStyle = '#333'; ctx.font = 'bold 18px Arial';
+      ctx.fillText('META', FINISH_X-20, 26);
+    }
+    function drawCorredores(){
+      const SPRITE_W = 96, SPRITE_H = 96;
+      corredores.forEach(w=>{
+        const img = RUNNER_IMAGES[w.idx];
+        const drawY = Math.round(w.y - SPRITE_H/2);
+        if (img && img.complete && img.naturalWidth > 0) {
+          try { ctx.drawImage(img, Math.round(w.x), drawY, SPRITE_W, SPRITE_H); }
+          catch(e) { ctx.fillStyle = w.color; ctx.fillRect(Math.round(w.x), drawY, SPRITE_W, SPRITE_H); }
+        } else {
+          ctx.fillStyle = w.color;
+          ctx.fillRect(Math.round(w.x), drawY, SPRITE_W, SPRITE_H);
+        }
+        ctx.fillStyle = '#222'; ctx.font='16px Arial';
+        ctx.fillText(w.nombre, Math.round(w.x), Math.round(w.y + SPRITE_H/2 + 18));
+      });
+    }
+
+    function updateCarrera(){
+      const now = performance.now();
+      corredores.forEach(w=>{
+        if (w.finished) return;
+        const avance = 1.2 + Math.random()*1.2 + Math.sin(now/420 + w.idx)*0.7; // un pelín más lento
+        w.x += Math.max(0.5, avance);
+        if (w.x >= FINISH_X){
+          w.x = FINISH_X; w.finished=true; resultados.push(w);
+          if (resultados.length === RUNNERS.length) finCarrera();
+        }
+      });
+    }
+    function loop(){
+      if (!enCarrera) return;
+      updateCarrera(); drawPista(); drawCorredores();
+      requestAnimationFrame(loop);
+    }
+
+    // Apuestas y modales
+    const startModal = document.getElementById('startModal');
+    const winModal = document.getElementById('winModal');
+    const gameOverModal = document.getElementById('gameOverModal');
+    function show(id){ const el = document.getElementById(id); if (el) el.classList.remove('hidden'); }
+    function hide(id){ const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
+
+    const runnerPicker = document.getElementById('runnerPicker');
+    const balanceLabel = document.getElementById('balanceLabel');
+    const betInput = document.getElementById('betInput');
+    const betMaxBtn = document.getElementById('betMaxBtn');
+    const startBtn = document.getElementById('startBtn');
+    const resultsModal = document.getElementById('resultsModal');
+    const resultsList = document.getElementById('resultsList');
+    const resultsContinueBtn = document.getElementById('resultsContinueBtn');
+    const resultsBackBtn = document.getElementById('resultsBackBtn');
+
+    // Override del selector para usar imágenes waifu en el modal
+    renderPicker = function(){
+      runnerPicker.innerHTML='';
+      RUNNERS.forEach((r,i)=>{
+        const div = document.createElement('div');
+        div.className = 'runner-option';
+        const img = document.createElement('img');
+        img.className = 'runner-img'; img.src = r.img || '';
+        img.alt = r.name || '';
+        img.onerror = () => { img.replaceWith(Object.assign(document.createElement('div'), { className: 'runner-swatch', style: `background:${r.color}` })); };
+        const label = document.createElement('div'); label.textContent = r.name;
+        div.appendChild(img); div.appendChild(label);
+        div.onclick = ()=>{
+          Array.from(runnerPicker.children).forEach(el=>el.classList.remove('selected'));
+          div.classList.add('selected'); eleccion = i; startBtn.disabled = false;
+        };
+        runnerPicker.appendChild(div);
+      });
+    };
+
+    function renderPicker(){
+      runnerPicker.innerHTML='';
+      RUNNERS.forEach((r,i)=>{
+        const div = document.createElement('div');
+        div.className = 'runner-option';
+        div.innerHTML = `<div class="runner-swatch" style="background:${r.color}"></div><div>${r.name}</div>`;
+        div.onclick = ()=>{
+          Array.from(runnerPicker.children).forEach(el=>el.classList.remove('selected'));
+          div.classList.add('selected'); eleccion = i; startBtn.disabled = false;
+        };
+        runnerPicker.appendChild(div);
+      });
+    }
+
+    function showStart(){
+      renderPicker();
+      startBtn.disabled = true; eleccion = null; apuesta = 0;
+      if (window.GameStorage && window.GameStorage.getCoins){
+        balance = window.GameStorage.getCoins(GAME_ID);
+      }
+      balanceLabel.textContent = `Saldo: €${balance}`;
+      betInput.max = String(balance);
+      betInput.value = '0';
+      hide('winModal'); hide('gameOverModal'); show('startModal');
+      updatePanel('🧮 Elige y apuesta');
+    }
+
+    function comenzar(){
+      // Validar apuesta
+      const v = parseInt(betInput.value||'0',10) || 0;
+      if (v < 0 || v > balance){ alert('Apuesta inválida'); return; }
+      if (eleccion === null){ alert('Elige un corredor'); return; }
+      apuesta = v; races += 1;
+      hide('startModal'); updatePanel('🏁 En carrera');
+      initCorredores(); enCarrera = true; sizeToWrapper(); requestAnimationFrame(loop);
+    }
+
+    function finCarrera(){
+      enCarrera = false;
+      // Payout
+      const pos = resultados.findIndex(w=>w.idx===eleccion);
+      let delta = 0;
+      if (apuesta > 0){
+        if (pos === 0) delta = apuesta; // x2 total (ganas 100% de la apuesta)
+        else if (pos === 1) delta = Math.floor(apuesta*0.25);
+        else if (pos === 2) delta = Math.floor(apuesta*0.10);
+        else delta = -apuesta; // 4º: 0 -> pierdes tu apuesta
+      }
+      try {
+        if (window.GameStorage && window.GameStorage.setCoins && window.GameStorage.getCoins){
+          balance = window.GameStorage.setCoins(GAME_ID, Math.max(0, window.GameStorage.getCoins(GAME_ID) + delta));
+        } else { balance = Math.max(0, balance + delta); }
+      } catch(e) { balance = Math.max(0, balance + delta); }
+
+      if (balance >= 200){ updatePanel('🏆 ¡Has ganado!'); show('winModal'); return; }
+      if (balance <= 0){ updatePanel('💸 Sin saldo'); show('gameOverModal'); return; }
+
+      // Preparar listado de resultados y mostrar modal intermedio
+      let html = '';
+      resultados.forEach((w,i)=>{
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}º`;
+        html += `${medal} <b>${w.nombre}</b><br>`;
+      });
+      html += `<br><b>Saldo:</b> €${balance}`;
+      if (resultsList) resultsList.innerHTML = html;
+      updatePanel('📜 Resultados');
+      show('resultsModal');
+    }
+
+    // Botones modales
+    document.getElementById('startBtn').addEventListener('click', comenzar);
+    document.getElementById('winBackBtn').addEventListener('click', ()=> window.location.href = '../index.html');
+    document.getElementById('overBackBtn').addEventListener('click', ()=> window.location.href = '../index.html');
+    document.getElementById('winRestartBtn').addEventListener('click', ()=> { showStart(); });
+    document.getElementById('overRestartBtn').addEventListener('click', ()=> {
+      // Reinicia saldo a 50€ al volver a jugar tras perder
+      try { if (window.GameStorage && window.GameStorage.setCoins) balance = window.GameStorage.setCoins(GAME_ID, 50); else balance = 50; } catch(e) { balance = 50; }
+      showStart();
+    });
+    resultsContinueBtn.addEventListener('click', ()=> { hide('resultsModal'); showStart(); });
+    resultsBackBtn.addEventListener('click', ()=> { window.location.href = '../index.html'; });
+
+    // Controles modal inicio
+    betMaxBtn.addEventListener('click', ()=> { betInput.value = String(balance); });
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', ()=>{
+      try {
+        if (window.GameStorage) {
+          const existing = window.GameStorage.getCoins ? window.GameStorage.getCoins(GAME_ID) : 0;
+          balance = existing || (window.GameStorage.setCoins ? window.GameStorage.setCoins(GAME_ID, 50) : 50);
+        } else { balance = 50; }
+      } catch(e) { balance = 50; }
+      initSidePanel(); sizeToWrapper(); showStart();
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -21,7 +21,7 @@ const LEGACY_KEY = `adrianBirthdayGameData:${STORAGE_NS}`;
 const GAMES_BY_NS = {
   adriansito: ['alcantara-en-apuros','shempions-league','pesadilla-cocina'],
   bongo:      ['alcantara-en-apuros','cheetos-pandilla','wake-up-bongo'],
-  colibrix:   ['rescate-waifu','zafineta-vu']
+  colibrix:   ['rescate-waifu','zafineta-vu','caballas-de-mierda']
 };
 
 function buildDefaultData(ns) {
@@ -31,6 +31,15 @@ function buildDefaultData(ns) {
   return {
     scores,
     completed,
+    // Monedero por juego (para apuestas u otros usos)
+    coins: (function(){
+      const c = {};
+      // Saldo inicial por juego (si aplica)
+      if (ns === 'colibrix') {
+        c['caballas-de-mierda'] = 50; // saldo inicial
+      }
+      return c;
+    })(),
     options: { immortalMode: false, soundEnabled: true, difficulty: 'normal' },
     lastPlayed: null,
     totalPlayTime: 0
@@ -57,7 +66,8 @@ function getGameData() {
         ...data,
         scores: { ...baseline.scores, ...data.scores },
         completed: { ...baseline.completed, ...data.completed },
-        options: { ...baseline.options, ...data.options }
+        options: { ...baseline.options, ...data.options },
+        coins: { ...baseline.coins, ...(data.coins || {}) }
       };
     }
   } catch (error) {
@@ -151,6 +161,22 @@ function getGameProgress() {
 function resetAllGameData() {
   localStorage.removeItem(STORAGE_KEY);
   console.log('Todos los datos del juego han sido reseteados');
+}
+
+// ===== Monedero =====
+function getCoins(gameId) {
+  const data = getGameData();
+  return Math.max(0, Math.floor((data.coins && data.coins[gameId]) || 0));
+}
+function setCoins(gameId, amount) {
+  const data = getGameData();
+  data.coins = data.coins || {};
+  data.coins[gameId] = Math.max(0, Math.floor(amount || 0));
+  saveGameData(data);
+  return data.coins[gameId];
+}
+function addCoins(gameId, delta) {
+  return setCoins(gameId, getCoins(gameId) + Math.floor(delta || 0));
 }
 
 /**
@@ -303,6 +329,10 @@ window.GameStorage = {
   getGameStats,
   updateGameLinks,
   showProgressMessage,
+  // Monedero
+  getCoins,
+  setCoins,
+  addCoins,
   onJuego1Complete,
   onJuego2Complete,
   onJuego3Complete

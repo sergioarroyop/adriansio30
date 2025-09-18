@@ -632,7 +632,7 @@ canvas {
 
 
 /* Modales de juego */
-#winModal, #gameOverModal, #startModal {
+#winModal, #gameOverModal, #startModal, #resultsModal {
   position: absolute;
   top: 0;
   left: 0;
@@ -652,7 +652,7 @@ canvas {
   backdrop-filter: blur(5px);
 }
 
-#winModal.hidden, #gameOverModal.hidden, #startModal.hidden {
+#winModal.hidden, #gameOverModal.hidden, #startModal.hidden, #resultsModal.hidden {
   display: none;
 }
 
@@ -788,7 +788,7 @@ canvas {
   max-width: 90%;
   max-height: 90%;
   width: 100%;
-  max-width: 800px;
+  max-width: 1066px; /* ~1/3 más ancho que 800px */
   display: flex;
   flex-direction: column;
   overflow: hidden;
